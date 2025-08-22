@@ -37,6 +37,13 @@ export const WorkspaceSubMenu = () => {
     {
       icon: <IconCozBot />,
       activeIcon: <IconCozBotFill />,
+      title: () => '力拓科技',
+      // path: SpaceSubModuleEnum.DEVELOP,
+      // dataTestId: 'navigation_workspace_develop',
+    },
+    {
+      icon: <IconCozBot />,
+      activeIcon: <IconCozBotFill />,
       title: () => I18n.t('navigation_workspace_develop', {}, 'Develop'),
       path: SpaceSubModuleEnum.DEVELOP,
       dataTestId: 'navigation_workspace_develop',

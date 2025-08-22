@@ -60,7 +60,6 @@ func NewService(c *Components) SingleAgent {
 	s := &singleAgentImpl{
 		Components: *c,
 	}
-
 	return s
 }
 
@@ -156,7 +155,7 @@ func (s *singleAgentImpl) UpdateSingleAgentDraft(ctx context.Context, agentInfo 
 	return s.AgentDraftRepo.Update(ctx, agentInfo)
 }
 
-func (s *singleAgentImpl) CreateSingleAgentDraftWithID(ctx context.Context, creatorID, agentID int64, draft *entity.SingleAgent) (int64, error) {
+func (s *singleAgentImpl) CreateSingleAgentDraftWithID(ctx context.Context, creatorID int64, agentID int64, draft *entity.SingleAgent) (int64, error) {
 	return s.AgentDraftRepo.CreateWithID(ctx, creatorID, agentID, draft)
 }
 
@@ -270,7 +269,7 @@ func (s *singleAgentImpl) UpdateAgentDraftDisplayInfo(ctx context.Context, userI
 	return s.AgentDraftRepo.UpdateDisplayInfo(ctx, userID, do)
 }
 
-func (s *singleAgentImpl) GetAgentDraftDisplayInfo(ctx context.Context, userID, agentID int64) (*entity.AgentDraftDisplayInfo, error) {
+func (s *singleAgentImpl) GetAgentDraftDisplayInfo(ctx context.Context, userID int64, agentID int64) (*entity.AgentDraftDisplayInfo, error) {
 	return s.AgentDraftRepo.GetDisplayInfo(ctx, userID, agentID)
 }
 

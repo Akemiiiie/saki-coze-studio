@@ -89,7 +89,7 @@ func (suite *KnowledgeTestSuite) SetupSuite() {
 		// esUsername    = os.Getenv("ES_USERNAME")
 		// esPassword    = os.Getenv("ES_PASSWORD")
 		milvusAddr    = os.Getenv("MILVUS_ADDR")
-		_             = os.Getenv("MYSQL_DSN")
+		_             = os.Getenv("SQL_CONN")
 		_             = os.Getenv("REDIS_ADDR")
 		minioEndpoint = os.Getenv(consts.MinIOEndpoint)
 		minioAK       = os.Getenv(consts.MinIOAK)

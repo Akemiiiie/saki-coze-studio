@@ -53,6 +53,13 @@ import (
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
+// Retrieve 知识库检索主函数，根据请求参数执行知识检索
+// 入参:
+//   - ctx: 上下文信息
+//   - request: 检索请求参数，包含查询词、知识库ID、检索策略等信息
+// 返回值:
+//   - response: 检索结果响应，包含检索到的知识片段列表
+//   - err: 错误信息，如果检索过程中出现错误则返回相应错误
 func (k *knowledgeSVC) Retrieve(ctx context.Context, request *RetrieveRequest) (response *RetrieveResponse, err error) {
 	if request == nil {
 		return nil, errorx.New(errno.ErrKnowledgeInvalidParamCode, errorx.KV("msg", "request is nil"))
@@ -67,26 +74,39 @@ func (k *knowledgeSVC) Retrieve(ctx context.Context, request *RetrieveRequest) (
 	if len(retrieveContext.Documents) == 0 {
 		return &knowledgeModel.RetrieveResponse{}, nil
 	}
+	// 创建一个链式的输出列表
 	chain := compose.NewChain[*RetrieveContext, []*knowledgeModel.RetrieveSlice]()
+	// 生成精确的检索上下文-查询重写节点，根据对话历史重写查询语句以提高检索准确性
 	rewriteNode := compose.InvokableLambda(k.queryRewriteNode)
-	// vectorized recall
+	// 向量检索节点，使用向量存储进行语义检索
 	vectorRetrieveNode := compose.InvokableLambda(k.vectorRetrieveNode)
-	// ES recall
+	// ES检索节点，使用ES全文检索
 	EsRetrieveNode := compose.InvokableLambda(k.esRetrieveNode)
-	// Nl2Sql recall
+	// NL2SQL检索节点，将自然语言查询转换为SQL进行表格数据检索
 	Nl2SqlRetrieveNode := compose.InvokableLambda(k.nl2SqlRetrieveNode)
-	// pass user query Node
+	// 未实现的用户节点查询
 	passRequestContextNode := compose.InvokableLambda(k.passRequestContext)
-	// reRank Node
+	// 重新排序节点，对多个检索结果进行重新排序
 	reRankNode := compose.InvokableLambda(k.reRankNode)
-	// Pack Result Interface
+	// 打包结果节点，将检索到的文档转换为最终的检索结果格式
 	packResult := compose.InvokableLambda(k.packResults)
+	// 并行执行
+	// 1：向量检索节点
+	// 2: ES检索节点，使用ES全文检索
+	// 3: NL2SQL检索节点，将自然语言查询转换为SQL进行表格数据检索
+	// 4: 未实现的用户节点查询
 	parallelNode := compose.NewParallel().
 		AddLambda("vectorRetrieveNode", vectorRetrieveNode).
 		AddLambda("esRetrieveNode", EsRetrieveNode).
 		AddLambda("nl2SqlRetrieveNode", Nl2SqlRetrieveNode).
 		AddLambda("passRequestContext", passRequestContextNode)
 
+	// 写入链式的检索信息
+	// 1: 检索上下文
+	// 2：并行执行的查询
+	// 3：对检索节点进行排序
+	// 4：打包结果
+	// 5：将链式的检索信息编译为一个可以运行的节点
 	r, err := chain.
 		AppendLambda(rewriteNode).
 		AppendParallel(parallelNode).
@@ -97,6 +117,7 @@ func (k *knowledgeSVC) Retrieve(ctx context.Context, request *RetrieveRequest) (
 		logs.CtxErrorf(ctx, "compile chain failed: %v", err)
 		return nil, errorx.New(errno.ErrKnowledgeBuildRetrieveChainFailCode, errorx.KV("msg", err.Error()))
 	}
+	// invoke编辑链式节点
 	output, err := r.Invoke(ctx, retrieveContext)
 	if err != nil {
 		logs.CtxErrorf(ctx, "invoke chain failed: %v", err)
@@ -107,12 +128,20 @@ func (k *knowledgeSVC) Retrieve(ctx context.Context, request *RetrieveRequest) (
 	}, nil
 }
 
+// newRetrieveContext 创建检索上下文，准备检索所需的各种信息
+// 入参:
+//   - ctx: 上下文信息
+//   - req: 检索请求参数
+// 返回值:
+//   - *RetrieveContext: 检索上下文信息，包含查询词、历史记录、知识库信息等
+//   - error: 错误信息，如果创建过程中出现错误则返回相应错误
 func (k *knowledgeSVC) newRetrieveContext(ctx context.Context, req *RetrieveRequest) (*RetrieveContext, error) {
 	if req.Strategy == nil {
 		return nil, errorx.New(errno.ErrKnowledgeInvalidParamCode, errorx.KV("msg", "strategy is required"))
 	}
 	knowledgeIDSets := sets.FromSlice(req.KnowledgeIDs)
 	docIDSets := sets.FromSlice(req.DocumentIDs)
+	// 查找可用的知识库和文档数据
 	enableDocs, enableKnowledge, err := k.prepareRAGDocuments(ctx, docIDSets.ToSlice(), knowledgeIDSets.ToSlice())
 	if err != nil {
 		logs.CtxErrorf(ctx, "prepare rag documents failed: %v", err)
@@ -121,6 +150,7 @@ func (k *knowledgeSVC) newRetrieveContext(ctx context.Context, req *RetrieveRequ
 	if len(enableDocs) == 0 {
 		return &RetrieveContext{}, nil
 	}
+	// 映射知识库 ID 与文档 ID
 	knowledgeInfoMap := make(map[int64]*KnowledgeInfo)
 	for _, kn := range enableKnowledge {
 		if knowledgeInfoMap[kn.ID] == nil {
@@ -162,7 +192,17 @@ func (k *knowledgeSVC) newRetrieveContext(ctx context.Context, req *RetrieveRequ
 	return &resp, nil
 }
 
+// prepareRAGDocuments 准备用于RAG检索的文档和知识库信息
+// 入参:
+//   - ctx: 上下文信息
+//   - documentIDs: 文档ID列表
+//   - knowledgeIDs: 知识库ID列表
+// 返回值:
+//   - []*model.KnowledgeDocument: 可用的文档列表
+//   - []*model.Knowledge: 可用的知识库列表
+//   - error: 错误信息，如果准备过程中出现错误则返回相应错误
 func (k *knowledgeSVC) prepareRAGDocuments(ctx context.Context, documentIDs []int64, knowledgeIDs []int64) ([]*model.KnowledgeDocument, []*model.Knowledge, error) {
+	// 检索生效的知识库
 	enableKnowledge, err := k.knowledgeRepo.FilterEnableKnowledge(ctx, knowledgeIDs)
 	if err != nil {
 		logs.CtxErrorf(ctx, "filter enable knowledge failed: %v", err)
@@ -171,10 +211,12 @@ func (k *knowledgeSVC) prepareRAGDocuments(ctx context.Context, documentIDs []in
 	if len(enableKnowledge) == 0 {
 		return nil, nil, nil
 	}
+	// 获取知识库Id集合
 	var enableKnowledgeIDs []int64
 	for _, kn := range enableKnowledge {
 		enableKnowledgeIDs = append(enableKnowledgeIDs, kn.ID)
 	}
+	// 查找可用的文档列表
 	enableDocs, _, err := k.documentRepo.FindDocumentByCondition(ctx, &entity.WhereDocumentOpt{
 		IDs:          documentIDs,
 		KnowledgeIDs: enableKnowledgeIDs,
@@ -188,6 +230,13 @@ func (k *knowledgeSVC) prepareRAGDocuments(ctx context.Context, documentIDs []in
 	return enableDocs, enableKnowledge, nil
 }
 
+// queryRewriteNode 查询重写节点，根据对话历史重写查询语句以提高检索准确性
+// 入参:
+//   - ctx: 上下文信息
+//   - req: 检索上下文
+// 返回值:
+//   - newRetrieveContext: 重写后的检索上下文
+//   - err: 错误信息，如果重写过程中出现错误则返回相应错误
 func (k *knowledgeSVC) queryRewriteNode(ctx context.Context, req *RetrieveContext) (newRetrieveContext *RetrieveContext, err error) {
 	if len(req.ChatHistory) == 0 {
 		// No context, no rewriting.
@@ -211,6 +260,13 @@ func (k *knowledgeSVC) queryRewriteNode(ctx context.Context, req *RetrieveContex
 	return req, nil
 }
 
+// vectorRetrieveNode 向量检索节点，使用向量存储进行语义检索
+// 入参:
+//   - ctx: 上下文信息
+//   - req: 检索上下文
+// 返回值:
+//   - retrieveResult: 检索结果文档列表
+//   - err: 错误信息，如果检索过程中出现错误则返回相应错误
 func (k *knowledgeSVC) vectorRetrieveNode(ctx context.Context, req *RetrieveContext) (retrieveResult []*schema.Document, err error) {
 	if req.Strategy.SearchType == knowledgeModel.SearchTypeFullText {
 		return nil, nil
@@ -235,6 +291,15 @@ func (k *knowledgeSVC) vectorRetrieveNode(ctx context.Context, req *RetrieveCont
 	return retrieveResult, nil
 }
 
+/*
+ * esRetrieveNode ES检索节点，使用ES全文检索
+ * 入参:
+ *   - ctx: 上下文信息
+ *   - req: 检索上下文
+ * 返回值:
+ *   - retrieveResult: 检索结果文档列表
+ *   - err: 错误信息，如果检索过程中出现错误则返回相应错误
+ */
 func (k *knowledgeSVC) esRetrieveNode(ctx context.Context, req *RetrieveContext) (retrieveResult []*schema.Document, err error) {
 	if req.Strategy.SearchType == knowledgeModel.SearchTypeSemantic {
 		return nil, nil
@@ -259,6 +324,14 @@ func (k *knowledgeSVC) esRetrieveNode(ctx context.Context, req *RetrieveContext)
 	return retrieveResult, nil
 }
 
+// retrieveChannels 通过指定的检索管理器检索各个知识库通道
+// 入参:
+//   - ctx: 上下文信息
+//   - req: 检索上下文
+//   - manager: 检索存储管理器
+// 返回值:
+//   - result: 检索结果文档列表
+//   - err: 错误信息，如果检索过程中出现错误则返回相应错误
 func (k *knowledgeSVC) retrieveChannels(ctx context.Context, req *RetrieveContext, manager searchstore.Manager) (result []*schema.Document, err error) {
 	query := req.OriginQuery
 	if req.Strategy.EnableQueryRewrite && req.RewrittenQuery != nil {
@@ -321,6 +394,13 @@ func (k *knowledgeSVC) retrieveChannels(ctx context.Context, req *RetrieveContex
 	return
 }
 
+// nl2SqlRetrieveNode NL2SQL检索节点，将自然语言查询转换为SQL进行表格数据检索
+// 入参:
+//   - ctx: 上下文信息
+//   - req: 检索上下文
+// 返回值:
+//   - retrieveResult: 检索结果文档列表
+//   - err: 错误信息，如果检索过程中出现错误则返回相应错误
 func (k *knowledgeSVC) nl2SqlRetrieveNode(ctx context.Context, req *RetrieveContext) (retrieveResult []*schema.Document, err error) {
 	hasTable := false
 	var tableDocs []*model.KnowledgeDocument
@@ -365,6 +445,15 @@ func (k *knowledgeSVC) nl2SqlRetrieveNode(ctx context.Context, req *RetrieveCont
 	}
 }
 
+// nl2SqlExec 执行NL2SQL转换和查询
+// 入参:
+//   - ctx: 上下文信息
+//   - doc: 知识库文档
+//   - retrieveCtx: 检索上下文
+//   - opts: NL2SQL选项
+// 返回值:
+//   - retrieveResult: 检索结果文档列表
+//   - err: 错误信息，如果执行过程中出现错误则返回相应错误
 func (k *knowledgeSVC) nl2SqlExec(ctx context.Context, doc *model.KnowledgeDocument, retrieveCtx *RetrieveContext, opts []nl2sql.Option) (
 	retrieveResult []*schema.Document, err error) {
 	sql, err := k.nl2Sql.NL2SQL(ctx, retrieveCtx.ChatHistory, []*document.TableSchema{packNL2SqlRequest(doc)}, opts...)
@@ -473,6 +562,13 @@ func (k *knowledgeSVC) passRequestContext(ctx context.Context, req *RetrieveCont
 	return req, nil
 }
 
+// reRankNode 重新排序节点，对多个检索结果进行重新排序
+// 入参:
+//   - ctx: 上下文信息
+//   - resultMap: 各个检索节点的结果映射
+// 返回值:
+//   - retrieveResult: 重新排序后的检索结果文档列表
+//   - err: 错误信息，如果排序过程中出现错误则返回相应错误
 func (k *knowledgeSVC) reRankNode(ctx context.Context, resultMap map[string]any) (retrieveResult []*schema.Document, err error) {
 	// First retrieve the context
 	retrieveCtx, ok := resultMap["passRequestContext"].(*RetrieveContext)
@@ -554,6 +650,13 @@ func (k *knowledgeSVC) reRankNode(ctx context.Context, resultMap map[string]any)
 	return retrieveResult, nil
 }
 
+// packResults 打包结果节点，将检索到的文档转换为最终的检索结果格式
+// 入参:
+//   - ctx: 上下文信息
+//   - retrieveResult: 检索结果文档列表
+// 返回值:
+//   - results: 最终的检索结果切片列表
+//   - err: 错误信息，如果打包过程中出现错误则返回相应错误
 func (k *knowledgeSVC) packResults(ctx context.Context, retrieveResult []*schema.Document) (results []*knowledgeModel.RetrieveSlice, err error) {
 	if len(retrieveResult) == 0 {
 		return nil, nil

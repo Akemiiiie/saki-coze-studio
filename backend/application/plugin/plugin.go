@@ -177,13 +177,13 @@ func (p *PluginApplicationService) toPluginInfoForPlayground(ctx context.Context
 	}
 
 	var creator *common.Creator
-	userInfo, err := p.userSVC.GetUserInfo(context.Background(), pl.DeveloperID)
+	userInfo, err := p.userSVC.GetUserInfo(context.Background(), int(pl.DeveloperID))
 	if err != nil {
 		logs.CtxErrorf(ctx, "get user info failed, err=%v", err)
 		creator = common.NewCreator()
 	} else {
 		creator = &common.Creator{
-			ID:             strconv.FormatInt(pl.DeveloperID, 10),
+			ID:             conv.Int64ToStr(pl.DeveloperID),
 			Name:           userInfo.Name,
 			AvatarURL:      userInfo.IconURL,
 			UserUniqueName: userInfo.UniqueName,
@@ -748,7 +748,7 @@ func (p *PluginApplicationService) GetOAuthStatus(ctx context.Context, req *plug
 		return nil, errorx.New(errno.ErrSearchPermissionCode, errorx.KV(errno.PluginMsgKey, "session is required"))
 	}
 
-	res, err := p.DomainSVC.GetOAuthStatus(ctx, *userID, req.PluginID)
+	res, err := p.DomainSVC.GetOAuthStatus(ctx, int(*userID), req.PluginID)
 	if err != nil {
 		return nil, errorx.Wrapf(err, "GetOAuthStatus failed, pluginID=%d", req.PluginID)
 	}
@@ -1605,7 +1605,7 @@ func (p *PluginApplicationService) RevokeAuthToken(ctx context.Context, req *plu
 	}
 
 	err = p.DomainSVC.RevokeAccessToken(ctx, &entity.AuthorizationCodeMeta{
-		UserID:   conv.Int64ToStr(*userID),
+		UserID:   conv.Int64ToStr(int64(*userID)),
 		PluginID: req.PluginID,
 		IsDraft:  req.GetBotID() == 0,
 	})
@@ -1746,7 +1746,7 @@ func (p *PluginApplicationService) GetQueriedOAuthPluginList(ctx context.Context
 		return nil, errorx.New(errno.ErrPluginPermissionCode, errorx.KV(errno.PluginMsgKey, "session is required"))
 	}
 
-	status, err := p.DomainSVC.GetAgentPluginsOAuthStatus(ctx, *userID, req.BotID)
+	status, err := p.DomainSVC.GetAgentPluginsOAuthStatus(ctx, int(*userID), req.BotID)
 	if err != nil {
 		return nil, errorx.Wrapf(err, "GetAgentPluginsOAuthStatus failed, userID=%d, agentID=%d", *userID, req.BotID)
 	}

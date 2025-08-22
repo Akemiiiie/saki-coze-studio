@@ -1,0 +1,63 @@
+version: "3.9"
+
+services:
+  mysql:
+    container_name: coze-mysql-dev
+    ports:
+      - "13306:3306"
+
+  redis:
+    container_name: coze-redis-dev
+    ports:
+      - "16379:6379"
+
+  elasticsearch:
+    container_name: coze-elasticsearch-dev
+    ports:
+      - "19200:9200"
+
+  minio:
+    container_name: coze-minio-dev
+    ports:
+      - "19000:9000"
+      - "19001:9001"
+
+  etcd:
+    container_name: coze-etcd-dev
+    ports:
+      - "12379:2379"
+      - "12380:2380"
+
+  milvus:
+    container_name: coze-milvus-dev
+    ports:
+      - "29530:19530"
+      - "29091:9091"
+
+  nsqlookupd:
+    container_name: coze-nsqlookupd-dev
+    ports:
+      - "14160:4160"
+      - "14161:4161"
+
+  nsqd:
+    container_name: coze-nsqd-dev
+    ports:
+      - "14150:4150"
+      - "14151:4151"
+
+  nsqadmin:
+    container_name: coze-nsqadmin-dev
+    ports:
+      - "14171:4171"
+
+  coze-server:
+    container_name: coze-server-dev
+    ports:
+      - "18888:8888"
+      - "18889:8889"
+
+  coze-web:
+    container_name: coze-web-dev
+    ports:
+      - "18080:80"

@@ -109,7 +109,7 @@ func (v *variablesImpl) upsertVariableMeta(ctx context.Context, bizID string, bi
 	do := &entity.VariablesMeta{
 		BizID:     bizID,
 		Version:   version,
-		CreatorID: int64(userID),
+		CreatorID: userID,
 		BizType:   bizType,
 		Variables: e.Variables,
 	}

@@ -39,6 +39,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/infra/impl/cache/redis"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/coderunner/direct"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/coderunner/sandbox"
+	"github.com/coze-dev/coze-studio/backend/infra/impl/dbconnection"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/document/ocr/ppocr"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/document/ocr/veocr"
 	builtinParser "github.com/coze-dev/coze-studio/backend/infra/impl/document/parser/builtin"
@@ -47,7 +48,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/infra/impl/eventbus"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/idgen"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/imagex/veimagex"
-	"github.com/coze-dev/coze-studio/backend/infra/impl/mysql"
 	"github.com/coze-dev/coze-studio/backend/infra/impl/storage"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/types/consts"
@@ -72,7 +72,7 @@ func Init(ctx context.Context) (*AppDependencies, error) {
 	deps := &AppDependencies{}
 	var err error
 
-	deps.DB, err = mysql.New()
+	deps.DB, err = dbconnection.New()
 	if err != nil {
 		return nil, err
 	}

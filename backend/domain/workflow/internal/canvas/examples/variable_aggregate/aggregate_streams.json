@@ -628,9 +628,7 @@
                     "content": {
                       "blockID": "",
                       "name": "",
-                      "path": [
-                        "user_var"
-                      ],
+                      "path": ["user_var"],
                       "source": "global_variable_user"
                     },
                     "rawMeta": {

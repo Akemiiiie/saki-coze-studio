@@ -98,7 +98,7 @@ func (s *searchImpl) SearchProjects(ctx context.Context, req *searchEntity.Searc
 
 	if req.OwnerID > 0 {
 		searchReq.Query.Bool.Must = append(searchReq.Query.Bool.Must,
-			es.NewEqualQuery(fieldOfOwnerID, conv.Int64ToStr(req.OwnerID)))
+			es.NewEqualQuery(fieldOfOwnerID, req.OwnerID))
 	}
 
 	if len(req.Status) > 0 {

@@ -642,7 +642,7 @@ func (d databaseService) UpdateDatabaseRecord(ctx context.Context, req *UpdateDa
 			cond := &rdb.Condition{
 				Field:    database.DefaultUidColName,
 				Operator: entity3.OperatorEqual,
-				Value:    strconv.FormatInt(req.UserID, 10),
+				Value:    req.UserID,
 			}
 
 			condition.Conditions = append(condition.Conditions, cond)
@@ -712,7 +712,7 @@ func (d databaseService) DeleteDatabaseRecord(ctx context.Context, req *DeleteDa
 		cond := &rdb.Condition{
 			Field:    database.DefaultUidColName,
 			Operator: entity3.OperatorEqual,
-			Value:    strconv.FormatInt(req.UserID, 10),
+			Value:    req.UserID,
 		}
 
 		condition.Conditions = append(condition.Conditions, cond)
@@ -779,7 +779,7 @@ func (d databaseService) ListDatabaseRecord(ctx context.Context, req *ListDataba
 			cond := &rdb.Condition{
 				Field:    database.DefaultUidColName,
 				Operator: entity3.OperatorEqual,
-				Value:    strconv.FormatInt(req.UserID, 10),
+				Value:    req.UserID,
 			}
 
 			if complexCondition == nil {

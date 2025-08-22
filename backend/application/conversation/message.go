@@ -109,7 +109,7 @@ func (c *ConversationApplicationService) buildAgentInfo(ctx context.Context, age
 			return &message.MsgParticipantInfo{
 				ID:        strconv.FormatInt(a.AgentID, 10),
 				Name:      a.Name,
-				UserID:    strconv.FormatInt(a.CreatorID, 10),
+				UserID:    conv.Int64ToStr(a.CreatorID),
 				Desc:      a.Desc,
 				AvatarURL: a.IconURI,
 			}

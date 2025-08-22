@@ -70,9 +70,7 @@
                   "content": {
                     "blockID": "",
                     "name": "",
-                    "path": [
-                      "app_var"
-                    ],
+                    "path": ["app_var"],
                     "source": "global_variable_app"
                   },
                   "rawMeta": {

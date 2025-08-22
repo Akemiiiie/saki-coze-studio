@@ -28,13 +28,13 @@ import (
 type SingleAgent interface {
 	// draft agent
 	CreateSingleAgentDraft(ctx context.Context, creatorID int64, draft *entity.SingleAgent) (agentID int64, err error)
-	CreateSingleAgentDraftWithID(ctx context.Context, creatorID, agentID int64, draft *entity.SingleAgent) (int64, error)
+	CreateSingleAgentDraftWithID(ctx context.Context, creatorID int64, agentID int64, draft *entity.SingleAgent) (int64, error)
 	MGetSingleAgentDraft(ctx context.Context, agentIDs []int64) (agents []*entity.SingleAgent, err error)
 	GetSingleAgentDraft(ctx context.Context, agentID int64) (agentInfo *entity.SingleAgent, err error)
 	UpdateSingleAgentDraft(ctx context.Context, agentInfo *entity.SingleAgent) (err error)
 	DeleteAgentDraft(ctx context.Context, spaceID, agentID int64) (err error)
 	UpdateAgentDraftDisplayInfo(ctx context.Context, userID int64, e *entity.AgentDraftDisplayInfo) error
-	GetAgentDraftDisplayInfo(ctx context.Context, userID, agentID int64) (*entity.AgentDraftDisplayInfo, error)
+	GetAgentDraftDisplayInfo(ctx context.Context, userID int64, agentID int64) (*entity.AgentDraftDisplayInfo, error)
 
 	// online agent
 	CreateSingleAgent(ctx context.Context, connectorID int64, version string, e *entity.SingleAgent) (int64, error)
@@ -45,8 +45,8 @@ type SingleAgent interface {
 	// ObtainAgentByIdentity support obtain agent by connectorID and agentID
 	ObtainAgentByIdentity(ctx context.Context, identity *entity.AgentIdentity) (*entity.SingleAgent, error)
 
-	GetAgentPopupCount(ctx context.Context, uid, agentID int64, agentPopupType playground.BotPopupType) (int64, error)
-	IncrAgentPopupCount(ctx context.Context, uid, agentID int64, agentPopupType playground.BotPopupType) error
+	GetAgentPopupCount(ctx context.Context, uid int, agentID int64, agentPopupType playground.BotPopupType) (int64, error)
+	IncrAgentPopupCount(ctx context.Context, uid int, agentID int64, agentPopupType playground.BotPopupType) error
 
 	// Publish
 	GetPublishedTime(ctx context.Context, agentID int64) (int64, error)

@@ -40,7 +40,7 @@ import (
 )
 
 func MockKnowledgeSVC(t *testing.T) Knowledge {
-	// os.Setenv("MYSQL_DSN", "coze:coze123@(localhost:3306)/opencoze?charset=utf8mb4&parseTime=True")
+	// os.Setenv("SQL_CONN", "coze:coze123@(localhost:3306)/opencoze?charset=utf8mb4&parseTime=True")
 	dsn := "root:root@tcp(127.0.0.1:3306)/opencoze?charset=utf8mb4&parseTime=True&loc=Local"
 	if os.Getenv("CI_JOB_NAME") != "" {
 		dsn = strings.ReplaceAll(dsn, "127.0.0.1", "mysql")

@@ -32,6 +32,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
+	"github.com/coze-dev/coze-studio/backend/pkg/pagination"
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
@@ -215,45 +216,38 @@ func (dao *KnowledgeDocumentSliceDAO) MGetSlices(ctx context.Context, sliceIDs [
 
 func (dao *KnowledgeDocumentSliceDAO) FindSliceByCondition(ctx context.Context, opts *entity.WhereSliceOpt) (
 	[]*model.KnowledgeDocumentSlice, int64, error) {
-
-	s := dao.Query.KnowledgeDocumentSlice
-	do := s.WithContext(ctx)
-	if opts.DocumentID != 0 {
-		do = do.Where(s.DocumentID.Eq(opts.DocumentID))
-	}
-	if len(opts.DocumentIDs) != 0 {
-		do = do.Where(s.DocumentID.In(opts.DocumentIDs...))
-	}
-	if opts.KnowledgeID != 0 {
-		do = do.Where(s.KnowledgeID.Eq(opts.KnowledgeID))
-	}
 	if opts.DocumentID == 0 && opts.KnowledgeID == 0 && len(opts.DocumentIDs) == 0 {
 		return nil, 0, errors.New("documentID and knowledgeID cannot be empty at the same time")
 	}
-	if opts.Keyword != nil && len(*opts.Keyword) != 0 {
-		do = do.Where(s.Content.Like(*opts.Keyword))
-	}
-
-	if opts.PageSize != 0 {
-		do = do.Limit(int(opts.PageSize))
-		do = do.Offset(int(opts.Sequence)).Order(s.Sequence.Asc())
-	}
-	if opts.NotEmpty != nil {
-		if ptr.From(opts.NotEmpty) {
-			do = do.Where(s.Content.Neq(""))
-		} else {
-			do = do.Where(s.Content.Eq(""))
+	s := dao.Query.KnowledgeDocumentSlice
+	// 构造分页参数
+	pageOpt := pagination.PageOptionFromPaginable(opts)
+	// 进行分页查询
+	pos, total, err := pagination.FindWithPagination[*model.KnowledgeDocumentSlice](dao.Query.KnowledgeDocumentSlice.WithContext(ctx).UnderlyingDB(),
+	func(db *gorm.DB) *gorm.DB {
+		do := s.WithContext(ctx)
+		if opts.DocumentID != 0 {
+			do = do.Where(s.DocumentID.Eq(opts.DocumentID))
 		}
-	}
-	pos, err := do.Find()
-	if err != nil {
-		return nil, 0, err
-	}
-	total, err := do.Limit(-1).Offset(-1).Count()
-	if err != nil {
-		return nil, 0, err
-	}
-	return pos, total, nil
+		if len(opts.DocumentIDs) != 0 {
+			do = do.Where(s.DocumentID.In(opts.DocumentIDs...))
+		}
+		if opts.KnowledgeID != 0 {
+			do = do.Where(s.KnowledgeID.Eq(opts.KnowledgeID))
+		}
+		if opts.Keyword != nil && len(*opts.Keyword) != 0 {
+			do = do.Where(s.Content.Like(*opts.Keyword))
+		}
+		if opts.NotEmpty != nil {
+			if ptr.From(opts.NotEmpty) {
+				do = do.Where(s.Content.Neq(""))
+			} else {
+				do = do.Where(s.Content.Eq(""))
+			}
+		}
+		return do.UnderlyingDB()
+	}, pageOpt)
+	return pos, total, err
 }
 
 func (dao *KnowledgeDocumentSliceDAO) GetSliceBySequence(ctx context.Context, documentID, sequence int64) ([]*model.KnowledgeDocumentSlice, error) {

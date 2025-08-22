@@ -35,17 +35,17 @@ func NewSpaceRepo(db *gorm.DB) SpaceRepository {
 
 type UserRepository interface {
 	GetUsersByEmail(ctx context.Context, email string) (*model.User, bool, error)
-	UpdateSessionKey(ctx context.Context, userID int64, sessionKey string) error
-	ClearSessionKey(ctx context.Context, userID int64) error
+	UpdateSessionKey(ctx context.Context, userID int, sessionKey string) error
+	ClearSessionKey(ctx context.Context, userID int) error
 	UpdatePassword(ctx context.Context, email, password string) error
-	GetUserByID(ctx context.Context, userID int64) (*model.User, error)
-	UpdateAvatar(ctx context.Context, userID int64, iconURI string) error
+	GetUserByID(ctx context.Context, userID int) (*model.User, error)
+	UpdateAvatar(ctx context.Context, userID int, iconURI string) error
 	CheckUniqueNameExist(ctx context.Context, uniqueName string) (bool, error)
-	UpdateProfile(ctx context.Context, userID int64, updates map[string]any) error
+	UpdateProfile(ctx context.Context, userID int, updates map[string]any) error
 	CheckEmailExist(ctx context.Context, email string) (bool, error)
 	CreateUser(ctx context.Context, user *model.User) error
 	GetUserBySessionKey(ctx context.Context, sessionKey string) (*model.User, bool, error)
-	GetUsersByIDs(ctx context.Context, userIDs []int64) ([]*model.User, error)
+	GetUsersByIDs(ctx context.Context, userIDs []int) ([]*model.User, error)
 }
 
 type SpaceRepository interface {

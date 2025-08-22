@@ -75,7 +75,7 @@ func (s *SingleAgentApplicationService) DuplicateDraftBot(ctx context.Context, r
 		return nil, err
 	}
 
-	userInfo, err := s.appContext.UserDomainSVC.GetUserInfo(ctx, userID)
+	userInfo, err := s.appContext.UserDomainSVC.GetUserInfo(ctx, int(userID))
 	if err != nil {
 		return nil, err
 	}

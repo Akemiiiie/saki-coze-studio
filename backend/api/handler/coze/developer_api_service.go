@@ -264,7 +264,7 @@ func GetUploadAuthToken(ctx context.Context, c *app.RequestContext) {
 	c.JSON(consts.StatusOK, resp)
 }
 
-func createSecret(uid int64, fileType string) string {
+func createSecret(uid int, fileType string) string {
 	num := 10
 	input := fmt.Sprintf("upload_%d_Ma*9)fhi_%d_gou_%s_rand_%d", uid, time.Now().Unix(), fileType, rand.Intn(100000))
 	// Do md5, take the first 20,//mapIntToBase62 map the number to Base62
@@ -304,7 +304,7 @@ func UploadFile(ctx context.Context, c *app.RequestContext) {
 		internalServerErrorResponse(ctx, c, errorx.New(errno.ErrUploadPermissionCode, errorx.KV("msg", "session required")))
 		return
 	}
-	secret := createSecret(ptr.From(userID), req.FileHead.FileType)
+	secret := createSecret(int(*userID), req.FileHead.FileType)
 	fileName := fmt.Sprintf("%d_%d_%s.%s", ptr.From(userID), time.Now().UnixNano(), secret, req.FileHead.FileType)
 	objectName := fmt.Sprintf("%s/%s", req.FileHead.BizType.String(), fileName)
 	resp, err = upload.SVC.UploadFile(ctx, fileContent, objectName)

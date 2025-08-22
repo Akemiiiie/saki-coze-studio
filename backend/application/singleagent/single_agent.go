@@ -417,8 +417,8 @@ func (s *SingleAgentApplicationService) singleAgentDraftDo2Vo(ctx context.Contex
 		SuggestReplyInfo:        do.SuggestReply,
 		CreatorId:               do.CreatorID,
 		TaskInfo:                &bot_common.TaskInfo{},
-		CreateTime:              do.CreatedAt / 1000,
-		UpdateTime:              do.UpdatedAt / 1000,
+		CreateTime:              time.Unix(do.CreatedAt/1000, 0),
+		UpdateTime:              time.Unix(do.UpdatedAt/1000, 0),
 		BotMode:                 bot_common.BotMode_SingleMode,
 		BackgroundImageInfoList: do.BackgroundImageInfoList,
 		Status:                  bot_common.BotStatus_Using,
@@ -586,7 +586,7 @@ func (s *SingleAgentApplicationService) ListAgentPublishHistory(ctx context.Cont
 			connectorInfos = append(connectorInfos, info.ToVO())
 		}
 
-		creator, err := s.appContext.UserDomainSVC.GetUserProfiles(ctx, v.CreatorID)
+		creator, err := s.appContext.UserDomainSVC.GetUserProfiles(ctx, int(v.CreatorID))
 		if err != nil {
 			return nil, err
 		}

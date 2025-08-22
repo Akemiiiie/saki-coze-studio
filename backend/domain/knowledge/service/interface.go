@@ -207,7 +207,7 @@ type RetrieveContext struct {
 	RewrittenQuery   *string                  // The rewritten query, if not rewritten, is nil, which will be added during execution
 	ChatHistory      []*schema.Message        // Nil if there is no dialogue history or no history is required
 	KnowledgeIDs     sets.Set[int64]          // The knowledge base ID involved in this search
-	KnowledgeInfoMap map[int64]*KnowledgeInfo // Mapping of Knowledge Base IDs to Document IDs
+	KnowledgeInfoMap map[int64]*KnowledgeInfo // 知识库 ID 与文档 ID 的映射
 	// recall strategy
 	Strategy *entity.RetrievalStrategy
 	// Retrieve the document information involved

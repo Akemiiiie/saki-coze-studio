@@ -278,7 +278,7 @@ func convertDocument2Model(documentEntity *entity.Document) *dataset.DocumentInf
 		TosURI:                &documentEntity.URI,
 		CreateTime:            int32(documentEntity.CreatedAtMs / 1000),
 		UpdateTime:            int32(documentEntity.UpdatedAtMs / 1000),
-		CreatorID:             ptr.Of(documentEntity.CreatorID),
+		CreatorID:             &documentEntity.CreatorID,
 		SliceCount:            int32(documentEntity.SliceCount),
 		Type:                  string(documentEntity.FileExtension),
 		Size:                  int32(documentEntity.Size),

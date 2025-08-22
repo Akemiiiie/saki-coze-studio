@@ -42,7 +42,7 @@ type ProjectPacker interface {
 	GetUserInfo(ctx context.Context, userID int64) *common.User
 }
 
-func NewPackProject(uid, projectID int64, tp common.IntelligenceType, s *SearchApplicationService) (ProjectPacker, error) {
+func NewPackProject(uid int64, projectID int64, tp common.IntelligenceType, s *SearchApplicationService) (ProjectPacker, error) {
 	base := projectBase{SVC: s, projectID: projectID, iType: tp, uid: uid}
 
 	switch tp {
@@ -71,7 +71,7 @@ func (p *projectBase) GetPermissionInfo() *intelligence.IntelligencePermissionIn
 }
 
 func (p *projectBase) GetUserInfo(ctx context.Context, userID int64) *common.User {
-	u, err := p.SVC.UserDomainSVC.GetUserInfo(ctx, userID)
+	u, err := p.SVC.UserDomainSVC.GetUserInfo(ctx, int(userID))
 	if err != nil {
 		logs.CtxErrorf(ctx, "[projectBase-GetUserInfo] failed to get user info, user_id: %d, err: %v", userID, err)
 		return nil

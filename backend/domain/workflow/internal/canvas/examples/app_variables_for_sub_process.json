@@ -182,9 +182,7 @@
                       "type": "ref",
                       "content": {
                         "source": "global_variable_app",
-                        "path": [
-                          "appv1"
-                        ],
+                        "path": ["appv1"],
                         "blockID": "",
                         "name": ""
                       }

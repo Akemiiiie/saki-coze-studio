@@ -36,7 +36,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/types/consts"
 )
 
-// PassportWebEmailRegisterV2Post .
+// 邮箱+账号注册
 // @router /passport/web/email/register/v2/ [POST]
 func PassportWebEmailRegisterV2Post(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -65,7 +65,7 @@ func PassportWebEmailRegisterV2Post(ctx context.Context, c *app.RequestContext) 
 	c.JSON(http.StatusOK, resp)
 }
 
-// PassportWebLogoutGet .
+// 登出.
 // @router /passport/web/logout/ [GET]
 func PassportWebLogoutGet(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -85,7 +85,7 @@ func PassportWebLogoutGet(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// PassportWebEmailLoginPost .
+// 邮箱账号登录
 // @router /passport/web/email/login/ [POST]
 func PassportWebEmailLoginPost(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -113,7 +113,7 @@ func PassportWebEmailLoginPost(ctx context.Context, c *app.RequestContext) {
 	c.JSON(http.StatusOK, resp)
 }
 
-// PassportWebEmailPasswordResetGet .
+// 重置密码
 // @router /passport/web/email/password/reset/ [GET]
 func PassportWebEmailPasswordResetGet(ctx context.Context, c *app.RequestContext) {
 	var err error
@@ -133,7 +133,7 @@ func PassportWebEmailPasswordResetGet(ctx context.Context, c *app.RequestContext
 	c.JSON(http.StatusOK, resp)
 }
 
-// PassportAccountInfoV2 .
+// 账号信息
 // @router /passport/account/info/v2/ [POST]
 func PassportAccountInfoV2(ctx context.Context, c *app.RequestContext) {
 	var err error

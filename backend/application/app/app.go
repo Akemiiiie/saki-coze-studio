@@ -1109,7 +1109,7 @@ func (a *APPApplicationService) duplicateDraftAPP(ctx context.Context, userID in
 	return newAppID, nil
 }
 
-func (a *APPApplicationService) duplicateDraftAPPResources(ctx context.Context, userID, newAppID int64, req *projectAPI.DraftProjectCopyRequest) (err error) {
+func (a *APPApplicationService) duplicateDraftAPPResources(ctx context.Context, userID int64, newAppID int64, req *projectAPI.DraftProjectCopyRequest) (err error) {
 	err = a.duplicateAPPVariables(ctx, userID, req.ProjectID, newAppID)
 	if err != nil {
 		return err
@@ -1208,7 +1208,7 @@ func (a *APPApplicationService) duplicateDraftAPPResources(ctx context.Context, 
 	return nil
 }
 
-func (a *APPApplicationService) duplicateAPPVariables(ctx context.Context, userID, fromAPPID, toAPPID int64) (err error) {
+func (a *APPApplicationService) duplicateAPPVariables(ctx context.Context, userID int64, fromAPPID, toAPPID int64) (err error) {
 	vars, err := a.variablesSVC.GetProjectVariablesMeta(ctx, strconv.FormatInt(fromAPPID, 10), "")
 	if err != nil {
 		return err
@@ -1232,7 +1232,7 @@ func (a *APPApplicationService) duplicateAPPVariables(ctx context.Context, userI
 }
 
 func (a *APPApplicationService) getAPPUserInfo(ctx context.Context, userID int64) (userInfo *common.User) {
-	ui, err := a.userSVC.GetUserInfo(ctx, userID)
+	ui, err := a.userSVC.GetUserInfo(ctx, int(userID))
 	if err != nil {
 		logs.CtxErrorf(ctx, "GetUserInfo failed, userID=%d, err=%v", userID, err)
 		return nil

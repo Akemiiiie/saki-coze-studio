@@ -2,8 +2,8 @@
 .dot {
   width: 4px;
   height: 4px;
-  border-radius: 50%;
   background: gray;
+  border-radius: 50%;
 }
 
 .empty-block {
@@ -11,8 +11,8 @@
 }
 
 .help-line-block {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -20,16 +20,18 @@
     position: absolute;
     top: 0;
     left: 0;
+
     width: 1px;
     height: 100%;
+
     background: gray;
   }
 }
 
 /** Business Component Style */
 .half-top-root {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -37,11 +39,13 @@
     position: absolute;
     top: 0;
     left: 0;
-    border-left: 1px solid gray;
-    border-bottom: 1px solid gray;
-    border-radius: 0 0 0 4px;
+
     width: 80%;
     height: 22px;
+
+    border-bottom: 1px solid gray;
+    border-left: 1px solid gray;
+    border-radius: 0 0 0 4px;
   }
 
   .dot {
@@ -50,18 +54,19 @@
 
   &.children {
     .dot {
-      display: block;
       position: absolute;
       top: 22px;
       left: 70%;
       transform: translate3d(0, -60%, 0);
+
+      display: block;
     }
   }
 }
 
 .half-bottom-root {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -69,11 +74,13 @@
     position: absolute;
     top: 22px;
     left: 0;
-    border-left: 1px solid gray;
-    border-top: 1px solid gray;
-    border-radius: 4px 0 0;
+
     width: 80%;
     height: calc(100% - 12px);
+
+    border-top: 1px solid gray;
+    border-left: 1px solid gray;
+    border-radius: 4px 0 0;
   }
 
   .dot {
@@ -82,18 +89,19 @@
 
   &.children {
     .dot {
-      display: block;
       position: absolute;
       top: 22px;
       left: 70%;
       transform: translate3d(0, -40%, 0);
+
+      display: block;
     }
   }
 }
 
 .full-root {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -101,10 +109,12 @@
     position: absolute;
     top: 0;
     left: 0;
+
     width: 80%;
     height: 22px;
-    border-left: 1px solid gray;
+
     border-bottom: 1px solid gray;
+    border-left: 1px solid gray;
     border-radius: 0 0 0 4px;
   }
 
@@ -112,8 +122,10 @@
     position: absolute;
     top: 19px;
     left: 0;
+
     width: 1px;
     height: calc(100% - 19px);
+
     background: gray;
   }
 
@@ -123,18 +135,19 @@
 
   &.children {
     .dot {
-      display: block;
       position: absolute;
       top: 22px;
       left: 70%;
       transform: translate3d(0, -60%, 0);
+
+      display: block;
     }
   }
 }
 
 .half-top-child {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -142,11 +155,13 @@
     position: absolute;
     top: 0;
     left: 0;
-    border-left: 1px solid gray;
-    border-bottom: 1px solid gray;
-    border-radius: 0 0 0 4px;
+
     width: 80%;
     height: 22px;
+
+    border-bottom: 1px solid gray;
+    border-left: 1px solid gray;
+    border-radius: 0 0 0 4px;
   }
 
   .dot {
@@ -155,18 +170,19 @@
 
   &.children {
     .dot {
-      display: block;
       position: absolute;
       top: 22px;
       left: 70%;
       transform: translate3d(0, -60%, 0);
+
+      display: block;
     }
   }
 }
 
 .full-child {
-  flex: 1;
   position: relative;
+  flex: 1;
   width: 100%;
   height: 100%;
 
@@ -174,10 +190,12 @@
     position: absolute;
     top: 0;
     left: 0;
+
     width: 80%;
     height: 22px;
-    border-left: 1px solid gray;
+
     border-bottom: 1px solid gray;
+    border-left: 1px solid gray;
     border-radius: 0 0 0 4px;
   }
 
@@ -185,8 +203,10 @@
     position: absolute;
     top: 19px;
     left: 0;
+
     width: 1px;
     height: calc(100% - 19px);
+
     background: gray;
   }
 
@@ -196,11 +216,12 @@
 
   &.children {
     .dot {
-      display: block;
       position: absolute;
       top: 22px;
       left: 70%;
       transform: translate3d(0, -60%, 0);
+
+      display: block;
     }
   }
 }

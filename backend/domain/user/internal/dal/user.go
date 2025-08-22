@@ -50,17 +50,18 @@ func (dao *UserDAO) GetUsersByEmail(ctx context.Context, email string) (*model.U
 	return user, true, err
 }
 
-func (dao *UserDAO) UpdateSessionKey(ctx context.Context, userID int64, sessionKey string) error {
-	_, err := dao.query.User.WithContext(ctx).Where(
+// 更新用户的SessionKey
+func (dao *UserDAO) UpdateSessionKey(ctx context.Context, userID int, sessionKey string) error {
+	_, err := dao.query.User.WithContext(ctx).Debug().Where(
 		dao.query.User.ID.Eq(userID),
 	).Updates(map[string]interface{}{
 		"session_key": sessionKey,
-		"updated_at":  time.Now().UnixMilli(),
 	})
 	return err
 }
 
-func (dao *UserDAO) ClearSessionKey(ctx context.Context, userID int64) error {
+// 清空用户的session_key
+func (dao *UserDAO) ClearSessionKey(ctx context.Context, userID int) error {
 	_, err := dao.query.User.WithContext(ctx).
 		Where(
 			dao.query.User.ID.Eq(userID),
@@ -70,29 +71,30 @@ func (dao *UserDAO) ClearSessionKey(ctx context.Context, userID int64) error {
 	return err
 }
 
+// 用户修改密码
 func (dao *UserDAO) UpdatePassword(ctx context.Context, email, password string) error {
 	_, err := dao.query.User.WithContext(ctx).Where(
 		dao.query.User.Email.Eq(email),
 	).Updates(map[string]interface{}{
 		"password":    password,
 		"session_key": "", // clear session key
-		"updated_at":  time.Now().UnixMilli(),
+		"update_time":  time.Now().UnixMilli(),
 	})
 	return err
 }
 
-func (dao *UserDAO) GetUserByID(ctx context.Context, userID int64) (*model.User, error) {
+func (dao *UserDAO) GetUserByID(ctx context.Context, userID int) (*model.User, error) {
 	return dao.query.User.WithContext(ctx).Where(
 		dao.query.User.ID.Eq(userID),
 	).First()
 }
 
-func (dao *UserDAO) UpdateAvatar(ctx context.Context, userID int64, iconURI string) error {
+func (dao *UserDAO) UpdateAvatar(ctx context.Context, userID int, iconURI string) error {
 	_, err := dao.query.User.WithContext(ctx).Where(
 		dao.query.User.ID.Eq(userID),
 	).Updates(map[string]interface{}{
 		"icon_uri":   iconURI,
-		"updated_at": time.Now().UnixMilli(),
+		"update_time": time.Now().UnixMilli(),
 	})
 	return err
 }
@@ -110,9 +112,9 @@ func (dao *UserDAO) CheckUniqueNameExist(ctx context.Context, uniqueName string)
 	return true, nil
 }
 
-func (dao *UserDAO) UpdateProfile(ctx context.Context, userID int64, updates map[string]interface{}) error {
-	if _, ok := updates["updated_at"]; !ok {
-		updates["updated_at"] = time.Now().UnixMilli()
+func (dao *UserDAO) UpdateProfile(ctx context.Context, userID int, updates map[string]interface{}) error {
+	if _, ok := updates["update_time"]; !ok {
+		updates["update_time"] = time.Now().UnixMilli()
 	}
 
 	_, err := dao.query.User.WithContext(ctx).Where(
@@ -155,7 +157,7 @@ func (dao *UserDAO) GetUserBySessionKey(ctx context.Context, sessionKey string) 
 }
 
 // GetUsersByIDs Query user information in batches
-func (dao *UserDAO) GetUsersByIDs(ctx context.Context, userIDs []int64) ([]*model.User, error) {
+func (dao *UserDAO) GetUsersByIDs(ctx context.Context, userIDs []int) ([]*model.User, error) {
 	return dao.query.User.WithContext(ctx).Where(
 		dao.query.User.ID.In(userIDs...),
 	).Find()

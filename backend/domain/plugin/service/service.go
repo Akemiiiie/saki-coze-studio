@@ -84,8 +84,8 @@ type PluginService interface {
 	ListPluginProducts(ctx context.Context, req *ListPluginProductsRequest) (resp *ListPluginProductsResponse, err error)
 	GetPluginProductAllTools(ctx context.Context, pluginID int64) (tools []*entity.ToolInfo, err error)
 
-	GetOAuthStatus(ctx context.Context, userID, pluginID int64) (resp *GetOAuthStatusResponse, err error)
-	GetAgentPluginsOAuthStatus(ctx context.Context, userID, agentID int64) (status []*AgentPluginOAuthStatus, err error)
+	GetOAuthStatus(ctx context.Context, userID int, pluginID int64) (resp *GetOAuthStatusResponse, err error)
+	GetAgentPluginsOAuthStatus(ctx context.Context, userID int, agentID int64) (status []*AgentPluginOAuthStatus, err error)
 	OAuthCode(ctx context.Context, code string, state *entity.OAuthState) (err error)
 	GetAccessToken(ctx context.Context, oa *entity.OAuthInfo) (accessToken string, err error)
 	RevokeAccessToken(ctx context.Context, meta *entity.AuthorizationCodeMeta) (err error)

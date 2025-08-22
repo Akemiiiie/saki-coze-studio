@@ -923,7 +923,7 @@ func (d *DatabaseApplicationService) CopyDatabase(ctx context.Context, req *Copy
 	}, nil
 }
 
-func (d *DatabaseApplicationService) duplicateRecords(ctx context.Context, srcDatabaseID, targetDatabaseID, userID int64, tableType table.TableType) error {
+func (d *DatabaseApplicationService) duplicateRecords(ctx context.Context, srcDatabaseID, targetDatabaseID int64, userID int64, tableType table.TableType) error {
 	listReq := &database.ListDatabaseRecordRequest{
 		DatabaseID: srcDatabaseID,
 		TableType:  tableType,

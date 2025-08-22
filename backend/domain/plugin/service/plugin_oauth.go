@@ -21,6 +21,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"os"
+	"strconv"
 	"strings"
 	"sync"
 	"time"
@@ -33,7 +34,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/encrypt"
 	"github.com/coze-dev/coze-studio/backend/domain/plugin/entity"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
-	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/taskgroup"
@@ -353,7 +353,7 @@ func (p *pluginServiceImpl) RevokeAccessToken(ctx context.Context, meta *entity.
 	return p.oauthRepo.DeleteAuthorizationCode(ctx, meta)
 }
 
-func (p *pluginServiceImpl) GetOAuthStatus(ctx context.Context, userID, pluginID int64) (resp *GetOAuthStatusResponse, err error) {
+func (p *pluginServiceImpl) GetOAuthStatus(ctx context.Context, userID int, pluginID int64) (resp *GetOAuthStatusResponse, err error) {
 	pl, exist, err := p.pluginRepo.GetDraftPlugin(ctx, pluginID)
 	if err != nil {
 		return nil, err
@@ -388,7 +388,7 @@ func (p *pluginServiceImpl) GetOAuthStatus(ctx context.Context, userID, pluginID
 	return resp, nil
 }
 
-func (p *pluginServiceImpl) getPluginOAuthStatus(ctx context.Context, userID int64, plugin *entity.PluginInfo, isDraft bool) (needAuth bool, authURL string, err error) {
+func (p *pluginServiceImpl) getPluginOAuthStatus(ctx context.Context, userID int, plugin *entity.PluginInfo, isDraft bool) (needAuth bool, authURL string, err error) {
 	authInfo := plugin.GetAuthInfo()
 
 	if authInfo.Type != model.AuthzTypeOfOAuth {
@@ -400,7 +400,7 @@ func (p *pluginServiceImpl) getPluginOAuthStatus(ctx context.Context, userID int
 
 	authCode := &entity.AuthorizationCodeInfo{
 		Meta: &entity.AuthorizationCodeMeta{
-			UserID:   conv.Int64ToStr(userID),
+			UserID:   strconv.Itoa(userID),
 			PluginID: plugin.ID,
 			IsDraft:  isDraft,
 		},
@@ -470,7 +470,7 @@ func getStanderOAuthConfig(config *model.OAuthAuthorizationCodeConfig) *oauth2.C
 	}
 }
 
-func (p *pluginServiceImpl) GetAgentPluginsOAuthStatus(ctx context.Context, userID, agentID int64) (status []*AgentPluginOAuthStatus, err error) {
+func (p *pluginServiceImpl) GetAgentPluginsOAuthStatus(ctx context.Context, userID int, agentID int64) (status []*AgentPluginOAuthStatus, err error) {
 	pluginIDs, err := p.toolRepo.GetAgentPluginIDs(ctx, agentID)
 	if err != nil {
 		return nil, errorx.Wrapf(err, "GetAgentPluginIDs failed, agentID=%d", agentID)

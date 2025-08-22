@@ -16,8 +16,10 @@
 
 package entity
 
+import "time"
+
 type User struct {
-	UserID int64
+	UserID int
 
 	Name         string // nickname
 	UniqueName   string // unique name
@@ -29,6 +31,6 @@ type User struct {
 	Locale       string
 	SessionKey   string // session key
 
-	CreatedAt int64 // creation time
-	UpdatedAt int64 // update time
+	CreatedAt time.Time // creation time
+	UpdatedAt time.Time // update time
 }

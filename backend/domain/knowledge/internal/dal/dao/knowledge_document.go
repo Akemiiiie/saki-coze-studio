@@ -19,6 +19,8 @@ package dao
 import (
 	"context"
 	"errors"
+	"fmt"
+	"os"
 	"strconv"
 	"time"
 
@@ -28,6 +30,8 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/knowledge/internal/dal/model"
 	"github.com/coze-dev/coze-studio/backend/domain/knowledge/internal/dal/query"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
+	"github.com/coze-dev/coze-studio/backend/pkg/pagination"
+	"github.com/coze-dev/coze-studio/backend/types/consts"
 )
 
 type KnowledgeDocumentDAO struct {
@@ -72,50 +76,49 @@ func (dao *KnowledgeDocumentDAO) fromCursor(cursor string) (id int64, err error)
 
 func (dao *KnowledgeDocumentDAO) FindDocumentByCondition(ctx context.Context, opts *entity.WhereDocumentOpt) ([]*model.KnowledgeDocument, int64, error) {
 	k := dao.Query.KnowledgeDocument
-	do := k.WithContext(ctx)
 	if opts == nil {
 		return nil, 0, nil
 	}
 	if len(opts.IDs) == 0 && len(opts.KnowledgeIDs) == 0 {
 		return nil, 0, errors.New("need ids or knowledge_ids")
 	}
-	if opts.CreatorID > 0 {
-		do = do.Where(k.CreatorID.Eq(opts.CreatorID))
-	}
-	if len(opts.IDs) > 0 {
-		do = do.Where(k.ID.In(opts.IDs...))
-	}
-	if len(opts.KnowledgeIDs) > 0 {
-		do = do.Where(k.KnowledgeID.In(opts.KnowledgeIDs...))
-	}
-	if len(opts.StatusIn) > 0 {
-		do = do.Where(k.Status.In(opts.StatusIn...))
-	}
-	if len(opts.StatusNotIn) > 0 {
-		do = do.Where(k.Status.NotIn(opts.StatusNotIn...))
-	}
-	if opts.SelectAll {
-		do = do.Limit(-1)
-	} else {
-		if opts.Limit != 0 {
-			do = do.Limit(opts.Limit)
-		}
-		if opts.Offset != nil {
-			do = do.Offset(ptr.From(opts.Offset))
-		}
-	}
 	if opts.Cursor != nil {
-		id, err := dao.fromCursor(ptr.From(opts.Cursor))
+		_, err := dao.fromCursor(ptr.From(opts.Cursor))
 		if err != nil {
 			return nil, 0, err
 		}
-		do = do.Where(k.ID.Lt(id)).Order(k.ID.Desc())
 	}
-	resp, err := do.Find()
-	if err != nil {
-		return nil, 0, err
-	}
-	total, err := do.Limit(-1).Offset(-1).Count()
+	// 构造分页参数
+	pageOpt := pagination.PageOptionFromPaginable(opts)
+	resp, total, err := pagination.FindWithPagination[*model.KnowledgeDocument](
+		dao.Query.KnowledgeDocument.WithContext(ctx).UnderlyingDB(),
+		func(db *gorm.DB) *gorm.DB {
+			do := k.WithContext(ctx)
+			if opts.CreatorID > 0 {
+				do = do.Where(k.CreatorID.Eq(opts.CreatorID))
+			}
+			if len(opts.IDs) > 0 {
+				do = do.Where(k.ID.In(opts.IDs...))
+			}
+			if len(opts.KnowledgeIDs) > 0 {
+				do = do.Where(k.KnowledgeID.In(opts.KnowledgeIDs...))
+			}
+			if len(opts.StatusIn) > 0 {
+				do = do.Where(k.Status.In(opts.StatusIn...))
+			}
+			if len(opts.StatusNotIn) > 0 {
+				do = do.Where(k.Status.NotIn(opts.StatusNotIn...))
+			}
+			// 游标
+			if opts.Cursor != nil {
+				if id, err := dao.fromCursor(ptr.From(opts.Cursor)); err == nil {
+					do = do.Where(k.ID.Lt(id)).Order(k.ID.Desc())
+				}
+			}
+			return do.UnderlyingDB()
+		},
+		pageOpt,
+	)
 	if err != nil {
 		return nil, 0, err
 	}
@@ -181,9 +184,28 @@ func (dao *KnowledgeDocumentDAO) UpdateDocumentSliceInfo(ctx context.Context, do
 	if err != nil {
 		return err
 	}
-	err = dao.DB.Raw("SELECT SUM(CHAR_LENGTH(content)) FROM knowledge_document_slice WHERE document_id = ? AND deleted_at IS NULL", documentID).Scan(&totalSize).Error
+	// 判断数据库类型
+	dbType := os.Getenv("DB_TYPE")
+	var query string
+	switch dbType {
+		case consts.SQLSERVER:
+				query = `
+						SELECT SUM(LEN(content))
+						FROM knowledge_document_slice
+						WHERE document_id = ? AND deleted_at IS NULL
+				`
+		case consts.MYSQL:
+				query = `
+						SELECT SUM(CHAR_LENGTH(content))
+						FROM knowledge_document_slice
+						WHERE document_id = ? AND deleted_at IS NULL
+				`
+		default:
+				return fmt.Errorf("unsupported db type: %s", dbType)
+	}
+	err = dao.DB.Raw(query, documentID).Scan(&totalSize).Error
 	if err != nil {
-		return err
+			return err
 	}
 	k := dao.Query.KnowledgeDocument
 	updates := map[string]any{}

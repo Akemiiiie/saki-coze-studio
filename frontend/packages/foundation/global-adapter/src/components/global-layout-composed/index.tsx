@@ -53,7 +53,7 @@ export const GlobalLayoutComposed: FC<PropsWithChildren> = ({ children }) => {
         banner={null}
         actions={[
           {
-            tooltip: I18n.t('creat_tooltip_create'),
+            tooltip: '这是创建一个新的机器人',
             icon: <IconCozPlusCircle />,
             onClick: createBot,
             dataTestId: 'layout_create-agent-button',
@@ -62,6 +62,13 @@ export const GlobalLayoutComposed: FC<PropsWithChildren> = ({ children }) => {
         menus={[
           {
             title: I18n.t('navigation_workspace'),
+            icon: <IconCozWorkspace />,
+            activeIcon: <IconCozWorkspaceFill />,
+            path: '/space',
+            dataTestId: 'layout_workspace-button',
+          },
+          {
+            title: 'Ltpower',
             icon: <IconCozWorkspace />,
             activeIcon: <IconCozWorkspaceFill />,
             path: '/space',

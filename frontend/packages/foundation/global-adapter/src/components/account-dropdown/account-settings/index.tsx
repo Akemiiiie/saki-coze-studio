@@ -21,8 +21,19 @@ import {
 } from '@coze-foundation/account-ui-base';
 import { I18n } from '@coze-arch/i18n';
 
+import React from 'react';
+
 export const useAccountSettings = () => {
   const tabs = [
+    {
+      id: 'Test',
+      tabName: '假设这里是一个React组件',
+      content: () => (
+        <React.StrictMode>
+          <div>ltpower</div>
+        </React.StrictMode>
+      ),
+    },
     {
       id: 'account',
       tabName: I18n.t('menu_profile_account'),

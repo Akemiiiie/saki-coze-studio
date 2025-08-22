@@ -97,9 +97,7 @@
                   "type": "ref",
                   "content": {
                     "source": "global_variable_app",
-                    "path": [
-                      "app_v1"
-                    ],
+                    "path": ["app_v1"],
                     "blockID": "",
                     "name": ""
                   },
@@ -175,9 +173,7 @@
                 },
                 "value": {
                   "type": "literal",
-                  "content": [
-                    "7480093452068470793"
-                  ]
+                  "content": ["7480093452068470793"]
                 }
               }
             }
@@ -244,10 +240,7 @@
                 },
                 "value": {
                   "type": "literal",
-                  "content": [
-                    "7480093452068470793",
-                    "7480093452068438025"
-                  ]
+                  "content": ["7480093452068470793", "7480093452068438025"]
                 }
               }
             },
@@ -366,9 +359,7 @@
                   "type": "ref",
                   "content": {
                     "source": "global_variable_app",
-                    "path": [
-                      "app_v1"
-                    ],
+                    "path": ["app_v1"],
                     "blockID": "",
                     "name": ""
                   }

@@ -39,7 +39,7 @@ type fieldMappingFn func(doc *entity.Document, enableCompactTable bool) []*searc
 
 type slice2DocumentFn func(ctx context.Context, slice *entity.Slice, columns []*entity.TableColumn, enableCompactTable bool) (*schema.Document, error)
 
-type document2SliceFn func(doc *schema.Document, knowledgeID, documentID, creatorID int64) (*entity.Slice, error)
+type document2SliceFn func(doc *schema.Document, knowledgeID int64, documentID int64, creatorID int64) (*entity.Slice, error)
 
 var fMapping = map[knowledge.DocumentType]fieldMappingFn{
 	knowledge.DocumentTypeText: func(doc *entity.Document, enableCompactTable bool) []*searchstore.Field {
@@ -206,7 +206,7 @@ var s2dMapping = map[knowledge.DocumentType]slice2DocumentFn{
 }
 
 var d2sMapping = map[knowledge.DocumentType]document2SliceFn{
-	knowledge.DocumentTypeText: func(doc *schema.Document, knowledgeID, documentID, creatorID int64) (*entity.Slice, error) {
+	knowledge.DocumentTypeText: func(doc *schema.Document, knowledgeID int64, documentID int64, creatorID int64) (*entity.Slice, error) {
 		slice := &entity.Slice{
 			Info:        knowledge.Info{},
 			KnowledgeID: knowledgeID,
@@ -246,7 +246,7 @@ var d2sMapping = map[knowledge.DocumentType]document2SliceFn{
 
 		return slice, nil
 	},
-	knowledge.DocumentTypeTable: func(doc *schema.Document, knowledgeID, documentID, creatorID int64) (*entity.Slice, error) {
+	knowledge.DocumentTypeTable: func(doc *schema.Document, knowledgeID int64, documentID int64, creatorID int64) (*entity.Slice, error) {
 		// NOTICE: The original data source of table type needs to be checked in rdb
 		slice := &entity.Slice{
 			Info:        knowledge.Info{},
@@ -288,7 +288,7 @@ var d2sMapping = map[knowledge.DocumentType]document2SliceFn{
 
 		return slice, nil
 	},
-	knowledge.DocumentTypeImage: func(doc *schema.Document, knowledgeID, documentID, creatorID int64) (*entity.Slice, error) {
+	knowledge.DocumentTypeImage: func(doc *schema.Document, knowledgeID int64, documentID int64, creatorID int64) (*entity.Slice, error) {
 		slice := &entity.Slice{
 			Info:        knowledge.Info{},
 			KnowledgeID: knowledgeID,

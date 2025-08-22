@@ -29,7 +29,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/types/errno"
 )
 
-func makeAgentDisplayInfoKey(userID, agentID int64) string {
+func makeAgentDisplayInfoKey(userID int64, agentID int64) string {
 	return fmt.Sprintf("agent_display_info:%d:%d", userID, agentID)
 }
 
@@ -49,7 +49,7 @@ func (sa *SingleAgentDraftDAO) UpdateDisplayInfo(ctx context.Context, userID int
 	return nil
 }
 
-func (sa *SingleAgentDraftDAO) GetDisplayInfo(ctx context.Context, userID, agentID int64) (*entity.AgentDraftDisplayInfo, error) {
+func (sa *SingleAgentDraftDAO) GetDisplayInfo(ctx context.Context, userID int64, agentID int64) (*entity.AgentDraftDisplayInfo, error) {
 	key := makeAgentDisplayInfoKey(userID, agentID)
 	data, err := sa.cacheClient.Get(ctx, key).Result()
 	if errors.Is(err, cache.Nil) {

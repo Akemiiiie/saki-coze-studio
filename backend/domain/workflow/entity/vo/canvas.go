@@ -148,7 +148,7 @@ type OutputEmitter struct {
 }
 
 type Exit struct {
-	TerminatePlan *TerminatePlan `json:"terminatePlan,omitempty"`
+	 TerminatePlan *TerminatePlan `json:"terminatePlan,omitempty"`
 }
 
 type LLM struct {

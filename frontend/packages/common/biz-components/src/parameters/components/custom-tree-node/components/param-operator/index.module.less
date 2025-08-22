@@ -2,8 +2,9 @@
   display: flex;
   flex-shrink: 0;
   align-items: center;
-  justify-content: flex-start;
   align-self: stretch;
+  justify-content: flex-start;
+
   width: 24px;
   height: 24px;
   margin-left: 8px;
@@ -13,9 +14,9 @@
     align-items: center;
 
     .icon {
+      cursor: pointer;
       width: 20px;
       height: 20px;
-      cursor: pointer;
       color: #888D92;
 
       &.disabled {
@@ -30,12 +31,14 @@
   }
 
   .add {
-    margin-left: 8px;
-    color: #4D53E8;
     cursor: pointer;
+
+    margin-left: 8px;
+
     font-size: 12px;
-    font-style: normal;
     font-weight: 600;
+    font-style: normal;
     line-height: 16px;
+    color: #4D53E8;
   }
 }

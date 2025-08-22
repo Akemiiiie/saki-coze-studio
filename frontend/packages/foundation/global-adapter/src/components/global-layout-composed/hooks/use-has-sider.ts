@@ -26,7 +26,7 @@ export const useHasSider = () => {
   const queryParams = new URLSearchParams(location.search);
   const pageMode = queryParams.get('page_mode');
 
-  // Priority is given to using page_mode parameters to determine whether it is full screen mode
+  // 优先使用页面模式参数来确定是否为全屏模式
   if (config.pageModeByQuery && pageMode === 'modal') {
     return false;
   }

@@ -95,7 +95,7 @@ func startHttpServer() {
 	config.AllowHeaders = []string{"*"}
 	corsHandler := cors.New(config)
 
-	// Middleware order matters
+	// 组建请求管道
 	s.Use(middleware.ContextCacheMW())     // must be first
 	s.Use(middleware.RequestInspectorMW()) // must be second
 	s.Use(middleware.SetHostMW())

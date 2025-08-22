@@ -19,7 +19,7 @@ package conversation
 import "github.com/coze-dev/coze-studio/backend/api/model/conversation/common"
 
 type GetCurrent struct {
-	UserID      int64        `json:"user_id"`
+	UserID      int64       `json:"user_id"`
 	Scene       common.Scene `json:"scene"`
 	AgentID     int64        `json:"agent_id"`
 	ConnectorID int64        `json:"connector_id"`

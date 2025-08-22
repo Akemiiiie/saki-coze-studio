@@ -57,7 +57,7 @@ func (sa *SingleAgentDraftDAO) Create(ctx context.Context, creatorID int64, draf
 	return sa.CreateWithID(ctx, creatorID, id, draft)
 }
 
-func (sa *SingleAgentDraftDAO) CreateWithID(ctx context.Context, creatorID, agentID int64, draft *entity.SingleAgent) (draftID int64, err error) {
+func (sa *SingleAgentDraftDAO) CreateWithID(ctx context.Context, creatorID int64, agentID int64, draft *entity.SingleAgent) (draftID int64, err error) {
 	po := sa.singleAgentDraftDo2Po(draft)
 	po.AgentID = agentID
 	po.CreatorID = creatorID

@@ -406,7 +406,7 @@ func (w *ApplicationService) GetCanvasInfo(ctx context.Context, req *workflow.Ge
 			SpaceID:          ptr.Of(strconv.FormatInt(wf.SpaceID, 10)),
 			SchemaJSON:       ptr.Of(wf.Canvas),
 			Creator: &workflow.Creator{
-				ID:   strconv.FormatInt(wf.CreatorID, 10),
+				ID:   conv.Int64ToStr(wf.CreatorID),
 				Self: ternary.IFElse[bool](wf.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
 			FlowMode:         wf.Mode,
@@ -461,7 +461,7 @@ func (w *ApplicationService) TestRun(ctx context.Context, req *workflow.WorkFlow
 		AppID:        appID,
 		AgentID:      agentID,
 		ConnectorID:  consts.CozeConnectorID,
-		ConnectorUID: strconv.FormatInt(uID, 10),
+		ConnectorUID: conv.Int64ToStr(uID),
 		TaskType:     workflowModel.TaskTypeForeground,
 		SyncPattern:  workflowModel.SyncPatternAsync,
 		BizType:      workflowModel.BizTypeWorkflow,
@@ -532,7 +532,7 @@ func (w *ApplicationService) NodeDebug(ctx context.Context, req *workflow.Workfl
 		AppID:        appID,
 		AgentID:      agentID,
 		ConnectorID:  consts.CozeConnectorID,
-		ConnectorUID: strconv.FormatInt(uID, 10),
+		ConnectorUID: conv.Int64ToStr(uID),
 		TaskType:     workflowModel.TaskTypeForeground,
 		SyncPattern:  workflowModel.SyncPatternAsync,
 		BizType:      workflowModel.BizTypeWorkflow,
@@ -1486,7 +1486,7 @@ func (w *ApplicationService) OpenAPIStreamRun(ctx context.Context, req *workflow
 		AppID:         appID,
 		AgentID:       agentID,
 		ConnectorID:   connectorID,
-		ConnectorUID:  strconv.FormatInt(userID, 10),
+		ConnectorUID:  conv.Int64ToStr(userID),
 		TaskType:      workflowModel.TaskTypeForeground,
 		SyncPattern:   workflowModel.SyncPatternStream,
 		InputFailFast: true,
@@ -1555,7 +1555,7 @@ func (w *ApplicationService) OpenAPIStreamResume(ctx context.Context, req *workf
 		Operator:     userID,
 		Mode:         workflowModel.ExecuteModeRelease,
 		ConnectorID:  connectorID,
-		ConnectorUID: strconv.FormatInt(userID, 10),
+		ConnectorUID: conv.Int64ToStr(userID),
 		BizType:      workflowModel.BizTypeWorkflow,
 	})
 	if err != nil {
@@ -1635,7 +1635,7 @@ func (w *ApplicationService) OpenAPIRun(ctx context.Context, req *workflow.OpenA
 		AppID:         appID,
 		AgentID:       agentID,
 		ConnectorID:   connectorID,
-		ConnectorUID:  strconv.FormatInt(userID, 10),
+		ConnectorUID:  conv.Int64ToStr(userID),
 		InputFailFast: true,
 		BizType:       workflowModel.BizTypeWorkflow,
 	}
@@ -1844,7 +1844,7 @@ func (w *ApplicationService) GetWorkflowReferences(ctx context.Context, req *wor
 			TemplateAuthorID: ptr.Of(strconv.FormatInt(wk.AuthorID, 10)),
 			SpaceID:          ptr.Of(strconv.FormatInt(wk.SpaceID, 10)),
 			Creator: &workflow.Creator{
-				ID: strconv.FormatInt(wk.CreatorID, 10),
+				ID: conv.Int64ToStr(wk.CreatorID),
 			},
 			FlowMode: wk.Mode,
 		}
@@ -2132,9 +2132,9 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 	wf2CreatorID := make(map[int64]string)
 	workflowList := make([]*workflow.Workflow, 0, len(wfs))
 	for _, w := range wfs {
-		wf2CreatorID[w.ID] = strconv.FormatInt(w.CreatorID, 10)
+		wf2CreatorID[w.ID] = conv.Int64ToStr(w.CreatorID)
 		ww := &workflow.Workflow{
-			WorkflowID:       strconv.FormatInt(w.ID, 10),
+			WorkflowID:       conv.Int64ToStr(w.ID),
 			Name:             w.Name,
 			Desc:             w.Desc,
 			IconURI:          w.IconURI,
@@ -2143,8 +2143,8 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 			Type:             w.ContentType,
 			SchemaType:       workflow.SchemaType_FDL,
 			Tag:              w.Tag,
-			TemplateAuthorID: ptr.Of(strconv.FormatInt(w.AuthorID, 10)),
-			SpaceID:          ptr.Of(strconv.FormatInt(w.SpaceID, 10)),
+			TemplateAuthorID: ptr.Of(conv.Int64ToStr(w.AuthorID)),
+			SpaceID:          ptr.Of(conv.Int64ToStr(w.SpaceID)),
 			PluginID: func() string {
 				if status == workflow.WorkFlowListStatus_UnPublished {
 					return "0"
@@ -2152,7 +2152,7 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 				return strconv.FormatInt(w.ID, 10)
 			}(),
 			Creator: &workflow.Creator{
-				ID:   strconv.FormatInt(w.CreatorID, 10),
+				ID:   conv.Int64ToStr(w.CreatorID),
 				Self: ternary.IFElse[bool](w.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
 		}
@@ -2182,8 +2182,8 @@ func (w *ApplicationService) ListWorkflow(ctx context.Context, req *workflow.Get
 		ww.StartNode = startNode
 
 		auth := &workflow.ResourceAuthInfo{
-			WorkflowID: strconv.FormatInt(w.ID, 10),
-			UserID:     strconv.FormatInt(w.CreatorID, 10),
+			WorkflowID: conv.Int64ToStr(w.ID),
+			UserID:     conv.Int64ToStr(w.CreatorID),
 			Auth:       &workflow.ResourceActionAuth{CanEdit: true, CanDelete: true, CanCopy: true},
 		}
 		workflowList = append(workflowList, ww)
@@ -2390,7 +2390,7 @@ func (w *ApplicationService) GetWorkflowDetailInfo(ctx context.Context, req *wor
 			Icon:       wf.IconURL,
 			FlowMode:   wf.Mode,
 			Creator: &workflow.Creator{
-				ID:   strconv.FormatInt(wf.CreatorID, 10),
+				ID:   conv.Int64ToStr(wf.CreatorID),
 				Self: ternary.IFElse[bool](wf.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
 
@@ -3226,8 +3226,8 @@ func (w *ApplicationService) GetExampleWorkFlowList(ctx context.Context, req *wo
 		ww.StartNode = startNode
 		response.Data.WorkflowList = append(response.Data.WorkflowList, ww)
 		response.Data.AuthList = append(response.Data.AuthList, &workflow.ResourceAuthInfo{
-			WorkflowID: strconv.FormatInt(w.ID, 10),
-			UserID:     strconv.FormatInt(w.CreatorID, 10),
+			WorkflowID: conv.Int64ToStr(w.ID),
+			UserID:     conv.Int64ToStr(w.CreatorID),
 			Auth:       &workflow.ResourceActionAuth{CanEdit: false, CanDelete: false, CanCopy: true},
 		})
 	}
@@ -3335,7 +3335,7 @@ func (w *ApplicationService) CopyWkTemplateApi(ctx context.Context, req *workflo
 			CreateTime: time.Now().Unix(),
 			SourceID:   wid,
 			Creator: &workflow.Creator{
-				ID:   strconv.FormatInt(wf.CreatorID, 10),
+				ID:   conv.Int64ToStr(wf.CreatorID),
 				Self: ternary.IFElse[bool](wf.CreatorID == ptr.From(ctxutil.GetUIDFromCtx(ctx)), true, false),
 			},
 			Schema:                wf.Canvas,

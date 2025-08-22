@@ -23,7 +23,7 @@ import (
 )
 
 type UpdateProfileRequest struct {
-	UserID      int64
+	UserID      int
 	Name        *string
 	UniqueName  *string
 	Description *string
@@ -60,21 +60,21 @@ type CreateUserRequest struct {
 }
 
 type CreateUserResponse struct {
-	UserID int64
+	UserID int
 }
 
 type User interface {
 	// Create creates or registers a new user.
 	Create(ctx context.Context, req *CreateUserRequest) (user *entity.User, err error)
 	Login(ctx context.Context, email, password string) (user *entity.User, err error)
-	Logout(ctx context.Context, userID int64) (err error)
+	Logout(ctx context.Context, userID int) (err error)
 	ResetPassword(ctx context.Context, email, password string) (err error)
-	GetUserInfo(ctx context.Context, userID int64) (user *entity.User, err error)
-	UpdateAvatar(ctx context.Context, userID int64, ext string, imagePayload []byte) (url string, err error)
+	GetUserInfo(ctx context.Context, userID int) (user *entity.User, err error)
+	UpdateAvatar(ctx context.Context, userID int, ext string, imagePayload []byte) (url string, err error)
 	UpdateProfile(ctx context.Context, req *UpdateProfileRequest) (err error)
 	ValidateProfileUpdate(ctx context.Context, req *ValidateProfileUpdateRequest) (resp *ValidateProfileUpdateResponse, err error)
-	GetUserProfiles(ctx context.Context, userID int64) (user *entity.User, err error)
-	MGetUserProfiles(ctx context.Context, userIDs []int64) (users []*entity.User, err error)
+	GetUserProfiles(ctx context.Context, userID int) (user *entity.User, err error)
+	MGetUserProfiles(ctx context.Context, userIDs []int) (users []*entity.User, err error)
 	ValidateSession(ctx context.Context, sessionKey string) (session *entity.Session, exist bool, err error)
 	GetUserSpaceList(ctx context.Context, userID int64) (spaces []*entity.Space, err error)
 }

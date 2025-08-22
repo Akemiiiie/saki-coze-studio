@@ -28,6 +28,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/knowledge/internal/dal/model"
 	"github.com/coze-dev/coze-studio/backend/domain/knowledge/internal/dal/query"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
+	"github.com/coze-dev/coze-studio/backend/pkg/pagination"
 )
 
 type KnowledgeDAO struct {
@@ -68,6 +69,7 @@ func (dao *KnowledgeDAO) MGetByID(ctx context.Context, ids []int64) ([]*model.Kn
 	return pos, nil
 }
 
+//过滤出在启用状态的知识（Knowledge）记录
 func (dao *KnowledgeDAO) FilterEnableKnowledge(ctx context.Context, knowledgeIDs []int64) ([]*model.Knowledge, error) {
 	if len(knowledgeIDs) == 0 {
 		return nil, nil
@@ -95,77 +97,77 @@ func (dao *KnowledgeDAO) UpdateWithTx(ctx context.Context, tx *gorm.DB, knowledg
 }
 
 func (dao *KnowledgeDAO) FindKnowledgeByCondition(ctx context.Context, opts *entity.WhereKnowledgeOption) (knowledge []*model.Knowledge, total int64, err error) {
-	k := dao.Query.Knowledge
-	do := k.WithContext(ctx).Debug()
 	if opts == nil {
 		return nil, 0, nil
 	}
-	if opts.Query != nil && len(*opts.Query) > 0 {
-		do = do.Where(k.Name.Like("%" + *opts.Query + "%"))
-	}
-	if opts.Name != nil && len(*opts.Name) > 0 {
-		do = do.Where(k.Name.Eq(*opts.Name))
+
+	// 显式指定泛型类型 *model.Knowledge
+	items, totalCount, err := pagination.FindWithPagination[*model.Knowledge](
+		dao.Query.Knowledge.WithContext(ctx).UnderlyingDB(), // 移除 .Debug()，除非调试需要
+		func(db *gorm.DB) *gorm.DB {
+			q := db.Model(&model.Knowledge{})
+
+			// 过滤条件
+			if opts.Query != nil && len(*opts.Query) > 0 {
+				q = q.Where("name LIKE ?", "%"+*opts.Query+"%")
+			}
+			if opts.Name != nil && len(*opts.Name) > 0 {
+				q = q.Where("name = ?", *opts.Name)
+			}
+			if len(opts.KnowledgeIDs) > 0 {
+				q = q.Where("id IN ?", opts.KnowledgeIDs)
+			}
+			if ptr.From(opts.AppID) != 0 {
+				q = q.Where("app_id = ?", ptr.From(opts.AppID))
+			} else if len(opts.KnowledgeIDs) == 0 {
+				q = q.Where("app_id = 0")
+			}
+			if ptr.From(opts.SpaceID) != 0 {
+				q = q.Where("space_id = ?", *opts.SpaceID)
+			}
+			if len(opts.Status) > 0 {
+				q = q.Where("status IN ?", opts.Status)
+			}
+			if opts.UserID != nil && ptr.From(opts.UserID) != 0 {
+				q = q.Where("creator_id = ?", *opts.UserID)
+			}
+			if opts.FormatType != nil {
+				q = q.Where("format_type = ?", int32(*opts.FormatType))
+			}
+
+			return q
+		},
+		&pagination.PageOption{
+			Page:     opts.Page,
+			PageSize: opts.PageSize,
+			OrderBy: func() string {
+				if opts.Order != nil {
+					if *opts.Order == entity.OrderCreatedAt {
+						if opts.OrderType != nil && *opts.OrderType == entity.OrderTypeAsc {
+							return "created_at ASC"
+						}
+						return "created_at DESC"
+					} else if *opts.Order == entity.OrderUpdatedAt {
+						if opts.OrderType != nil && *opts.OrderType == entity.OrderTypeAsc {
+							return "updated_at ASC"
+						}
+						return "updated_at DESC"
+					}
+				}
+				return "created_at DESC"
+			}(),
+		},
+	)
+
+	if err != nil {
+		return nil, 0, err
 	}
 
-	if len(opts.KnowledgeIDs) > 0 {
-		do = do.Where(k.ID.In(opts.KnowledgeIDs...))
-	}
-	if ptr.From(opts.AppID) != 0 {
-		do = do.Where(k.AppID.Eq(ptr.From(opts.AppID)))
-	} else {
-		if len(opts.KnowledgeIDs) == 0 {
-			do = do.Where(k.AppID.Eq(0))
-		}
-	}
-	if ptr.From(opts.SpaceID) != 0 {
-		do = do.Where(k.SpaceID.Eq(*opts.SpaceID))
-	}
-	if len(opts.Status) > 0 {
-		do = do.Where(k.Status.In(opts.Status...))
-	}
-	if opts.UserID != nil && ptr.From(opts.UserID) != 0 {
-		do = do.Where(k.CreatorID.Eq(*opts.UserID))
-	}
-	if opts.FormatType != nil {
-		do = do.Where(k.FormatType.Eq(int32(*opts.FormatType)))
-	}
-	if opts.Order != nil {
-		if *opts.Order == entity.OrderCreatedAt {
-			if opts.OrderType != nil {
-				if *opts.OrderType == entity.OrderTypeAsc {
-					do = do.Order(k.CreatedAt.Asc())
-				} else {
-					do = do.Order(k.CreatedAt.Desc())
-				}
-			} else {
-				do = do.Order(k.CreatedAt.Desc())
-			}
-		} else if *opts.Order == entity.OrderUpdatedAt {
-			if opts.OrderType != nil {
-				if *opts.OrderType == entity.OrderTypeAsc {
-					do = do.Order(k.UpdatedAt.Asc())
-				} else {
-					do = do.Order(k.UpdatedAt.Desc())
-				}
-			} else {
-				do = do.Order(k.UpdatedAt.Desc())
-			}
-		}
-	}
-	if opts.Page != nil && opts.PageSize != nil {
-		offset := (*opts.Page - 1) * (*opts.PageSize)
-		do = do.Limit(*opts.PageSize).Offset(offset)
-	}
-	knowledge, err = do.Find()
-	if err != nil {
-		return nil, 0, err
-	}
-	total, err = do.Limit(-1).Offset(-1).Count()
-	if err != nil {
-		return nil, 0, err
-	}
-	return knowledge, total, err
+	knowledge = items
+	total = totalCount
+	return
 }
+
 
 func (dao *KnowledgeDAO) GetByID(ctx context.Context, id int64) (*model.Knowledge, error) {
 	k := dao.Query.Knowledge

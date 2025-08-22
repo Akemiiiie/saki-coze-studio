@@ -81,7 +81,7 @@ func init() {
 
 	code.Register(
 		ErrKnowledgeDBCode,
-		"MySQL operation failed: {msg}",
+		"SQL operation failed: {msg}",
 		code.WithAffectStability(false),
 	)
 

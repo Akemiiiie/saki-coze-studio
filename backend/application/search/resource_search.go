@@ -171,7 +171,7 @@ func (s *SearchApplicationService) getResourceIconURL(ctx context.Context, uri *
 }
 
 func (s *SearchApplicationService) packUserInfo(ctx context.Context, ri *common.ResourceInfo, ownerID int64) *common.ResourceInfo {
-	u, err := s.UserDomainSVC.GetUserInfo(ctx, ownerID)
+	u, err := s.UserDomainSVC.GetUserInfo(ctx, int(ownerID))
 	if err != nil {
 		logs.CtxWarnf(ctx, "[LibraryResourceList] GetUserInfo failed, uid: %d, resID: %d, Name : %s, err: %v",
 			ownerID, ri.ResID, ri.GetName(), err)

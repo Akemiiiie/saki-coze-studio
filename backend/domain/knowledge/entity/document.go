@@ -80,4 +80,12 @@ type WhereDocumentOpt struct {
 	Offset       *int
 	Cursor       *string
 	SelectAll    bool
+	Order        *Order
+	OrderType    *OrderType
 }
+
+// 实现分页接口
+func (o *WhereDocumentOpt) GetLimit() *int         { return &o.Limit }
+func (o *WhereDocumentOpt) GetOffset() *int        { return o.Offset }
+func (o *WhereDocumentOpt) GetOrder() *Order       { return o.Order }
+func (o *WhereDocumentOpt) GetOrderType() *OrderType { return o.OrderType }

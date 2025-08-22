@@ -29,7 +29,6 @@ import (
 	crossdatabase "github.com/coze-dev/coze-studio/backend/crossdomain/contract/database"
 	"github.com/coze-dev/coze-studio/backend/domain/memory/database/service"
 	database "github.com/coze-dev/coze-studio/backend/domain/memory/database/service"
-	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ternary"
 )
@@ -237,7 +236,7 @@ func (d *databaseImpl) Update(ctx context.Context, request *model.UpdateRequest)
 
 	uid := ctxutil.GetUIDFromCtx(ctx)
 	if uid != nil {
-		req.UserID = conv.Int64ToStr(*uid)
+		req.UserID = cast.ToString(*uid)
 	}
 	req.UpsertRows, req.SQLParams, err = resolveUpsertRow(request.Fields)
 	if err != nil {

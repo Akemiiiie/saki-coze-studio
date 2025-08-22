@@ -59,3 +59,8 @@ values-dev.yaml
 
 *.tsbuildinfo
 
+docker-compose - 副本.yml
+ - 副本.env
+.env
+.env.debug
+/backend/resources

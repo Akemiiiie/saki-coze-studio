@@ -32,3 +32,15 @@ type WhereSliceOpt struct {
 	Offset      int64
 	NotEmpty    *bool
 }
+
+// 实现分页接口
+func (o *WhereSliceOpt) GetLimit() *int {
+	limit := int(o.PageSize)  // 类型转换
+	return &limit
+}
+func (o *WhereSliceOpt) GetOffset() *int {
+	offset := int(o.Offset)  // 类型转换
+  return &offset
+}
+func (o *WhereSliceOpt) GetOrder() *Order        { return nil  }
+func (o *WhereSliceOpt) GetOrderType() *OrderType { return nil  }

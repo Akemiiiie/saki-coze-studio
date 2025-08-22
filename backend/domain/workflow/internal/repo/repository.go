@@ -418,17 +418,23 @@ func (r *RepositoryImpl) GetMeta(ctx context.Context, id int64) (_ *vo.Meta, err
 		}
 	}()
 
-	meta, err := r.query.WorkflowMeta.WithContext(ctx).Debug().Where(r.query.WorkflowMeta.ID.Eq(id)).First()
+	// 使用 UnderlyingDB + 原生 SQL 查询，绕过 gen.Condition 的类型限制
+	var metaModel model.WorkflowMeta
+	err = r.query.WorkflowMeta.WithContext(ctx).UnderlyingDB().
+		Raw("SELECT * FROM workflow_meta WHERE id = ?", id).
+		Scan(&metaModel).Error
 	if err != nil {
 		if errors.Is(err, gorm.ErrRecordNotFound) {
-			return nil, vo.WrapError(errno.ErrWorkflowNotFound, fmt.Errorf("workflow meta not found for ID %d: %w", id, err),
+			return nil, vo.WrapError(errno.ErrWorkflowNotFound,
+				fmt.Errorf("workflow meta not found for ID %d: %w", id, err),
 				errorx.KV("id", strconv.FormatInt(id, 10)))
 		}
 		return nil, fmt.Errorf("failed to get workflow meta for ID %d: %w", id, err)
 	}
 
-	return r.convertMeta(ctx, meta)
+	return r.convertMeta(ctx, &metaModel)
 }
+
 
 func (r *RepositoryImpl) convertMeta(ctx context.Context, meta *model.WorkflowMeta) (*vo.Meta, error) {
 	url, err := r.tos.GetObjectUrl(ctx, meta.IconURI)
@@ -1160,31 +1166,36 @@ func (r *RepositoryImpl) MGetMetas(ctx context.Context, query *vo.MetaQuery) (
 	workflowMetaDo := r.query.WorkflowMeta.WithContext(ctx).Debug().Where(conditions...)
 
 	var total int64
-	if query.NeedTotalNumber { // this is the total count
-		total, err = workflowMetaDo.Count()
-		if err != nil {
-			return nil, 0, err
-		}
+	if query.NeedTotalNumber { // 统计总数（不要带排序）
+			countDo := workflowMetaDo.Session(&gorm.Session{}) // 新 session，不带 Order
+			total, err = countDo.Count()
+			if err != nil {
+					return nil, 0, err
+			}
 	}
 
+	// 排序
 	if query.DescByUpdate {
-		workflowMetaDo = workflowMetaDo.Order(r.query.WorkflowMeta.UpdatedAt.Desc())
+			workflowMetaDo = workflowMetaDo.Order(r.query.WorkflowMeta.UpdatedAt.Desc())
 	} else {
-		workflowMetaDo = workflowMetaDo.Order(r.query.WorkflowMeta.CreatedAt.Desc())
+			workflowMetaDo = workflowMetaDo.Order(r.query.WorkflowMeta.CreatedAt.Desc())
 	}
-
 	if query.Page != nil {
-		result, _, err = workflowMetaDo.FindByPage(query.Page.Offset(), query.Page.Limit())
+    // 分页查询
+		result, err = workflowMetaDo.
+				Offset(query.Page.Offset()).
+				Limit(query.Page.Limit()).
+				Find()
 		if err != nil {
-			return nil, 0, err
+				return nil, 0, err
 		}
 	} else {
 		if len(conditions) == 0 {
-			return nil, 0, errors.New("no conditions provided")
+				return nil, 0, errors.New("no conditions provided")
 		}
 		result, err = workflowMetaDo.Find()
 		if err != nil {
-			return nil, 0, err
+				return nil, 0, err
 		}
 	}
 

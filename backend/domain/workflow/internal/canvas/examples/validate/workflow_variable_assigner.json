@@ -93,9 +93,7 @@
                   "type": "ref",
                   "content": {
                     "source": "global_variable_app",
-                    "path": [
-                      "app_v1"
-                    ],
+                    "path": ["app_v1"],
                     "blockID": "",
                     "name": ""
                   }
@@ -123,9 +121,7 @@
                   "type": "ref",
                   "content": {
                     "source": "global_variable_app",
-                    "path": [
-                      "app_list_v1"
-                    ],
+                    "path": ["app_list_v1"],
                     "blockID": "",
                     "name": ""
                   }
@@ -156,9 +152,7 @@
                   "type": "ref",
                   "content": {
                     "source": "global_variable_app",
-                    "path": [
-                      "app_list_v2"
-                    ],
+                    "path": ["app_list_v2"],
                     "blockID": "",
                     "name": ""
                   }

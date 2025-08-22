@@ -135,10 +135,7 @@
                 },
                 "type": "list",
                 "value": {
-                  "content": [
-                    "。",
-                    "，"
-                  ],
+                  "content": ["。", "，"],
                   "type": "literal"
                 }
               },

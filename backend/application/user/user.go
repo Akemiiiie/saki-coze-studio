@@ -106,7 +106,7 @@ func (u *UserApplicationService) PassportWebLogoutGet(ctx context.Context, req *
 ) {
 	uid := ctxutil.MustGetUIDFromCtx(ctx)
 
-	err = u.DomainSVC.Logout(ctx, uid)
+	err = u.DomainSVC.Logout(ctx, int(uid))
 	if err != nil {
 		return nil, err
 	}
@@ -116,7 +116,7 @@ func (u *UserApplicationService) PassportWebLogoutGet(ctx context.Context, req *
 	}, nil
 }
 
-// PassportWebEmailLoginPost handle user email login requests
+// 用户登录请求处理
 func (u *UserApplicationService) PassportWebEmailLoginPost(ctx context.Context, req *passport.PassportWebEmailLoginPostRequest) (
 	resp *passport.PassportWebEmailLoginPostResponse, sessionKey string, err error,
 ) {
@@ -149,7 +149,7 @@ func (u *UserApplicationService) PassportAccountInfoV2(ctx context.Context, req 
 ) {
 	userID := ctxutil.MustGetUIDFromCtx(ctx)
 
-	userInfo, err := u.DomainSVC.GetUserInfo(ctx, userID)
+	userInfo, err := u.DomainSVC.GetUserInfo(ctx, int(userID))
 	if err != nil {
 		return nil, err
 	}
@@ -182,7 +182,7 @@ func (u *UserApplicationService) UserUpdateAvatar(ctx context.Context, mimeType 
 
 	uid := ctxutil.MustGetUIDFromCtx(ctx)
 
-	url, err := u.DomainSVC.UpdateAvatar(ctx, uid, ext, req.GetAvatar())
+	url, err := u.DomainSVC.UpdateAvatar(ctx, int(uid), ext, req.GetAvatar())
 	if err != nil {
 		return nil, err
 	}
@@ -202,7 +202,7 @@ func (u *UserApplicationService) UserUpdateProfile(ctx context.Context, req *pas
 	userID := ctxutil.MustGetUIDFromCtx(ctx)
 
 	err = u.DomainSVC.UpdateProfile(ctx, &user.UpdateProfileRequest{
-		UserID:      userID,
+		UserID:      int(userID),
 		Name:        req.Name,
 		UniqueName:  req.UserUniqueName,
 		Description: req.Description,
@@ -253,8 +253,8 @@ func (u *UserApplicationService) GetSpaceListV2(ctx context.Context, req *playgr
 func (u *UserApplicationService) MGetUserBasicInfo(ctx context.Context, req *playground.MGetUserBasicInfoRequest) (
 	resp *playground.MGetUserBasicInfoResponse, err error,
 ) {
-	userIDs, err := langSlices.TransformWithErrorCheck(req.GetUserIds(), func(s string) (int64, error) {
-		return strconv.ParseInt(s, 10, 64)
+	userIDs, err := langSlices.TransformWithErrorCheck(req.GetUserIds(), func(s string) (int, error) {
+		return strconv.Atoi(s)
 	})
 	if err != nil {
 		return nil, errorx.WrapByCode(err, errno.ErrUserInvalidParamCode, errorx.KV("msg", "invalid user id"))
@@ -267,7 +267,7 @@ func (u *UserApplicationService) MGetUserBasicInfo(ctx context.Context, req *pla
 
 	return &playground.MGetUserBasicInfoResponse{
 		UserBasicInfoMap: langSlices.ToMap(userInfos, func(userInfo *entity.User) (string, *playground.UserBasicInfo) {
-			return strconv.FormatInt(userInfo.UserID, 10), userDo2PlaygroundTo(userInfo)
+			return strconv.Itoa(userInfo.UserID), userDo2PlaygroundTo(userInfo)
 		}),
 		Code: 0,
 	}, nil
@@ -326,7 +326,7 @@ func userDo2PassportTo(userDo *entity.User) *passport.User {
 		},
 		Locale: locale,
 
-		UserCreateTime: userDo.CreatedAt / 1000,
+		UserCreateTime: userDo.CreatedAt.UnixMilli(),
 	}
 }
 
@@ -336,6 +336,6 @@ func userDo2PlaygroundTo(userDo *entity.User) *playground.UserBasicInfo {
 		Username:       userDo.Name,
 		UserUniqueName: ptr.Of(userDo.UniqueName),
 		UserAvatar:     userDo.IconURL,
-		CreateTime:     ptr.Of(userDo.CreatedAt / 1000),
+		CreateTime:     ptr.Of(userDo.CreatedAt.UnixMilli()),
 	}
 }

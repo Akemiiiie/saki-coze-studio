@@ -39,7 +39,6 @@ import (
 	"github.com/coze-dev/coze-studio/backend/infra/contract/idgen"
 	"github.com/coze-dev/coze-studio/backend/infra/contract/storage"
 	"github.com/coze-dev/coze-studio/backend/pkg/errorx"
-	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/ptr"
 	"github.com/coze-dev/coze-studio/backend/pkg/lang/slices"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
@@ -64,6 +63,7 @@ type userImpl struct {
 	*Components
 }
 
+// 登录方法
 func (u *userImpl) Login(ctx context.Context, email, password string) (user *userEntity.User, err error) {
 	userModel, exist, err := u.UserRepo.GetUsersByEmail(ctx, email)
 	if err != nil {
@@ -74,7 +74,7 @@ func (u *userImpl) Login(ctx context.Context, email, password string) (user *use
 		return nil, errorx.New(errno.ErrUserInfoInvalidateCode)
 	}
 
-	// Verify the password using the Argon2id algorithm
+	// 使用 Argon2id 算法验证密码
 	valid, err := verifyPassword(password, userModel.Password)
 	if err != nil {
 		return nil, err
@@ -83,11 +83,13 @@ func (u *userImpl) Login(ctx context.Context, email, password string) (user *use
 		return nil, errorx.New(errno.ErrUserInfoInvalidateCode)
 	}
 
+	// 创建唯一Sessionid
 	uniqueSessionID, err := u.IDGen.GenID(ctx)
 	if err != nil {
 		return nil, fmt.Errorf("failed to generate session id: %w", err)
 	}
 
+	// 创建sessionKey
 	sessionKey, err := generateSessionKey(uniqueSessionID)
 	if err != nil {
 		return nil, err
@@ -101,7 +103,7 @@ func (u *userImpl) Login(ctx context.Context, email, password string) (user *use
 
 	userModel.SessionKey = sessionKey
 
-	resURL, err := u.IconOSS.GetObjectUrl(ctx, userModel.IconURI)
+	resURL, err := u.IconOSS.GetObjectUrl(ctx, userModel.HeadImage)
 	if err != nil {
 		return nil, err
 	}
@@ -109,7 +111,7 @@ func (u *userImpl) Login(ctx context.Context, email, password string) (user *use
 	return userPo2Do(userModel, resURL), nil
 }
 
-func (u *userImpl) Logout(ctx context.Context, userID int64) (err error) {
+func (u *userImpl) Logout(ctx context.Context, userID int) (err error) {
 	err = u.UserRepo.ClearSessionKey(ctx, userID)
 	if err != nil {
 		return err
@@ -133,7 +135,7 @@ func (u *userImpl) ResetPassword(ctx context.Context, email, password string) (e
 	return nil
 }
 
-func (u *userImpl) GetUserInfo(ctx context.Context, userID int64) (resp *userEntity.User, err error) {
+func (u *userImpl) GetUserInfo(ctx context.Context, userID int) (resp *userEntity.User, err error) {
 	if userID <= 0 {
 		return nil, errorx.New(errno.ErrUserInvalidParamCode,
 			errorx.KVf("msg", "invalid user id : %d", userID))
@@ -144,7 +146,7 @@ func (u *userImpl) GetUserInfo(ctx context.Context, userID int64) (resp *userEnt
 		return nil, err
 	}
 
-	resURL, err := u.IconOSS.GetObjectUrl(ctx, userModel.IconURI)
+	resURL, err := u.IconOSS.GetObjectUrl(ctx, userModel.HeadImage)
 	if err != nil {
 		return nil, err
 	}
@@ -152,8 +154,8 @@ func (u *userImpl) GetUserInfo(ctx context.Context, userID int64) (resp *userEnt
 	return userPo2Do(userModel, resURL), nil
 }
 
-func (u *userImpl) UpdateAvatar(ctx context.Context, userID int64, ext string, imagePayload []byte) (url string, err error) {
-	avatarKey := "user_avatar/" + strconv.FormatInt(userID, 10) + "." + ext
+func (u *userImpl) UpdateAvatar(ctx context.Context, userID int, ext string, imagePayload []byte) (url string, err error) {
+	avatarKey := "user_avatar/" + strconv.Itoa(userID) + "." + ext
 	err = u.IconOSS.PutObject(ctx, avatarKey, imagePayload)
 	if err != nil {
 		return "", err
@@ -280,12 +282,30 @@ func (u *userImpl) Create(ctx context.Context, req *CreateUserRequest) (user *us
 		name = strings.Split(req.Email, "@")[0]
 	}
 
-	userID, err := u.IDGen.GenID(ctx)
-	if err != nil {
-		return nil, fmt.Errorf("generate id error: %w", err)
-	}
+	// userID, err := u.IDGen.GenID(ctx)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("generate id error: %w", err)
+	// }
 
 	now := time.Now().UnixMilli()
+	newUser := &model.User{
+		HeadImage:      uploadEntity.UserIconURI,
+		Name:         name,
+		UniqueName:   u.getUniqueNameFormEmail(ctx, req.Email),
+		Email:        req.Email,
+		Password:     hashedPassword,
+		Description:  req.Description,
+		UserVerified: false,
+		Locale:       req.Locale,
+		Is_delete:		false,
+		Create_time:    time.UnixMilli(now),
+		Update_time:    time.UnixMilli(now),
+	}
+
+	err = u.UserRepo.CreateUser(ctx, newUser)
+	if err != nil {
+		return nil, fmt.Errorf("insert user failed: %w", err)
+	}
 
 	spaceID := req.SpaceID
 	if spaceID <= 0 {
@@ -300,8 +320,8 @@ func (u *userImpl) Create(ctx context.Context, req *CreateUserRequest) (user *us
 			Name:        "Personal Space",
 			Description: "This is your personal space",
 			IconURI:     uploadEntity.EnterpriseIconURI,
-			OwnerID:     userID,
-			CreatorID:   userID,
+			OwnerID:     int64(newUser.ID),
+			CreatorID:   int64(newUser.ID),
 			CreatedAt:   now,
 			UpdatedAt:   now,
 		})
@@ -312,28 +332,9 @@ func (u *userImpl) Create(ctx context.Context, req *CreateUserRequest) (user *us
 		spaceID = sid
 	}
 
-	newUser := &model.User{
-		ID:           userID,
-		IconURI:      uploadEntity.UserIconURI,
-		Name:         name,
-		UniqueName:   u.getUniqueNameFormEmail(ctx, req.Email),
-		Email:        req.Email,
-		Password:     hashedPassword,
-		Description:  req.Description,
-		UserVerified: false,
-		Locale:       req.Locale,
-		CreatedAt:    now,
-		UpdatedAt:    now,
-	}
-
-	err = u.UserRepo.CreateUser(ctx, newUser)
-	if err != nil {
-		return nil, fmt.Errorf("insert user failed: %w", err)
-	}
-
 	err = u.SpaceRepo.AddSpaceUser(ctx, &model.SpaceUser{
 		SpaceID:   spaceID,
-		UserID:    userID,
+		UserID:    int64(newUser.ID),
 		RoleType:  1,
 		CreatedAt: now,
 		UpdatedAt: now,
@@ -342,7 +343,7 @@ func (u *userImpl) Create(ctx context.Context, req *CreateUserRequest) (user *us
 		return nil, fmt.Errorf("add space user failed: %w", err)
 	}
 
-	iconURL, err := u.IconOSS.GetObjectUrl(ctx, newUser.IconURI)
+	iconURL, err := u.IconOSS.GetObjectUrl(ctx, newUser.HeadImage)
 	if err != nil {
 		return nil, fmt.Errorf("get icon url failed: %w", err)
 	}
@@ -377,10 +378,10 @@ func (u *userImpl) ValidateSession(ctx context.Context, sessionKey string) (
 	session *userEntity.Session, exist bool, err error,
 ) {
 	// authentication session key
-	sessionModel, err := verifySessionKey(sessionKey)
-	if err != nil {
-		return nil, false, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "access denied"))
-	}
+	// sessionModel, err := verifySessionKey(sessionKey)
+	// if err != nil {
+	// 	return nil, false, errorx.New(errno.ErrUserAuthenticationFailed, errorx.KV("reason", "access denied"))
+	// }
 
 	// Retrieve user information from the database
 	userModel, exist, err := u.UserRepo.GetUserBySessionKey(ctx, sessionKey)
@@ -393,14 +394,14 @@ func (u *userImpl) ValidateSession(ctx context.Context, sessionKey string) (
 	}
 
 	return &userEntity.Session{
-		UserID:    userModel.ID,
+		UserID:    int64(userModel.ID),
 		Locale:    userModel.Locale,
-		CreatedAt: sessionModel.CreatedAt,
-		ExpiresAt: sessionModel.ExpiresAt,
+		CreatedAt: time.Now(),
+		ExpiresAt: time.Now().Add(consts.DefaultSessionDuration),
 	}, true, nil
 }
 
-func (u *userImpl) MGetUserProfiles(ctx context.Context, userIDs []int64) (users []*userEntity.User, err error) {
+func (u *userImpl) MGetUserProfiles(ctx context.Context, userIDs []int) (users []*userEntity.User, err error) {
 	userModels, err := u.UserRepo.GetUsersByIDs(ctx, userIDs)
 	if err != nil {
 		return nil, err
@@ -409,7 +410,7 @@ func (u *userImpl) MGetUserProfiles(ctx context.Context, userIDs []int64) (users
 	users = make([]*userEntity.User, 0, len(userModels))
 	for _, um := range userModels {
 		// Get image URL
-		resURL, err := u.IconOSS.GetObjectUrl(ctx, um.IconURI)
+		resURL, err := u.IconOSS.GetObjectUrl(ctx, um.HeadImage)
 		if err != nil {
 			continue // If getting the image URL fails, skip the user
 		}
@@ -420,15 +421,15 @@ func (u *userImpl) MGetUserProfiles(ctx context.Context, userIDs []int64) (users
 	return users, nil
 }
 
-func (u *userImpl) GetUserProfiles(ctx context.Context, userID int64) (user *userEntity.User, err error) {
-	userInfos, err := u.MGetUserProfiles(ctx, []int64{userID})
+func (u *userImpl) GetUserProfiles(ctx context.Context, userID int) (user *userEntity.User, err error) {
+	userInfos, err := u.MGetUserProfiles(ctx, []int{userID})
 	if err != nil {
 		return nil, err
 	}
 
 	if len(userInfos) == 0 {
 		return nil, errorx.New(errno.ErrUserResourceNotFound, errorx.KV("type", "user"),
-			errorx.KV("id", conv.Int64ToStr(userID)))
+			errorx.KV("id", strconv.Itoa(userID)))
 	}
 
 	return userInfos[0], nil
@@ -528,7 +529,7 @@ func hashPassword(password string) (string, error) {
 	return encoded, nil
 }
 
-// Verify that the passwords match
+// 验证密码是否匹配
 func verifyPassword(password, encodedHash string) (bool, error) {
 	// Parse the encoded hash string
 	parts := strings.Split(encodedHash, "$")
@@ -568,32 +569,32 @@ func verifyPassword(password, encodedHash string) (bool, error) {
 	return subtle.ConstantTimeCompare(decodedHash, computedHash) == 1, nil
 }
 
-// Session structure, which contains session information
+// Session 结构，包含Session信息
 type Session struct {
 	ID        int64     `json:"id"`         // Session unique device identifier
-	CreatedAt time.Time `json:"created_at"` // creation time
-	ExpiresAt time.Time `json:"expires_at"` // expiration time
+	CreatedAt time.Time `json:"created_at"` // 创建时间
+	ExpiresAt time.Time `json:"expires_at"` // 到期时间
 }
 
-// The key used for signing (in practice you should read from the configuration or use environment variables)
+// 用于签名的密钥（实际上应从配置中读取或使用环境变量）
 var hmacSecret = []byte("opencoze-session-hmac-key")
 
-// Generate a secure session key
+// 生成密钥
 func generateSessionKey(sessionID int64) (string, error) {
-	// Create the default session structure (without the user ID, which will be set in the Login method)
+	// 创建默认会话结构（不含用户 ID，该 ID 将在登录方法中设置）
 	session := Session{
 		ID:        sessionID,
 		CreatedAt: time.Now(),
 		ExpiresAt: time.Now().Add(consts.DefaultSessionDuration),
 	}
 
-	// Serialize session data
+	// 序列化
 	sessionData, err := json.Marshal(session)
 	if err != nil {
 		return "", err
 	}
 
-	// Calculate HMAC signatures to ensure integrity
+	// 计算 HMAC 签名以确保完整性
 	h := hmac.New(sha256.New, hmacSecret)
 	h.Write(sessionData)
 	signature := h.Sum(nil)
@@ -605,7 +606,7 @@ func generateSessionKey(sessionID int64) (string, error) {
 	return base64.RawURLEncoding.EncodeToString(finalData), nil
 }
 
-// Verify the validity of the session key
+// 验证会话密钥的有效性
 func verifySessionKey(sessionKey string) (*Session, error) {
 	// Decode session data
 	data, err := base64.RawURLEncoding.DecodeString(sessionKey)
@@ -637,7 +638,7 @@ func verifySessionKey(sessionKey string) (*Session, error) {
 		return nil, fmt.Errorf("invalid session data: %w", err)
 	}
 
-	// Check if the session has expired
+	// 检查会话是否已过期
 	if time.Now().After(session.ExpiresAt) {
 		return nil, fmt.Errorf("session expired")
 	}
@@ -652,12 +653,12 @@ func userPo2Do(model *model.User, iconURL string) *userEntity.User {
 		UniqueName:   model.UniqueName,
 		Email:        model.Email,
 		Description:  model.Description,
-		IconURI:      model.IconURI,
+		IconURI:      model.HeadImage,
 		IconURL:      iconURL,
 		UserVerified: model.UserVerified,
 		Locale:       model.Locale,
 		SessionKey:   model.SessionKey,
-		CreatedAt:    model.CreatedAt,
-		UpdatedAt:    model.UpdatedAt,
+		CreatedAt:    model.Create_time,
+		UpdatedAt:    model.Update_time,
 	}
 }

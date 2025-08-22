@@ -95,6 +95,8 @@ const (
 
 	ParserType        = "PARSER_TYPE"
 	PPStructureAPIURL = "PADDLEOCR_STRUCTURE_API_URL"
+	SQLSERVER  = "sqlserver"
+	MYSQL      = "mysql"
 )
 
 const (

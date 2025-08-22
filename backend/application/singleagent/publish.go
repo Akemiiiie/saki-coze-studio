@@ -163,7 +163,7 @@ func (s *SingleAgentApplicationService) GetAgentPopupInfo(ctx context.Context, r
 	agentPopupCountInfo := make(map[playground.BotPopupType]int64, len(req.BotPopupTypes))
 
 	for _, agentPopupType := range req.BotPopupTypes {
-		count, err := s.DomainSVC.GetAgentPopupCount(ctx, uid, req.GetBotID(), agentPopupType)
+		count, err := s.DomainSVC.GetAgentPopupCount(ctx, int(uid), req.GetBotID(), agentPopupType)
 		if err != nil {
 			return nil, err
 		}
@@ -181,7 +181,7 @@ func (s *SingleAgentApplicationService) GetAgentPopupInfo(ctx context.Context, r
 func (s *SingleAgentApplicationService) UpdateAgentPopupInfo(ctx context.Context, req *playground.UpdateBotPopupInfoRequest) (*playground.UpdateBotPopupInfoResponse, error) {
 	uid := ctxutil.MustGetUIDFromCtx(ctx)
 
-	err := s.DomainSVC.IncrAgentPopupCount(ctx, uid, req.GetBotID(), req.GetBotPopupType())
+	err := s.DomainSVC.IncrAgentPopupCount(ctx, int(uid), req.GetBotID(), req.GetBotPopupType())
 	if err != nil {
 		return nil, err
 	}

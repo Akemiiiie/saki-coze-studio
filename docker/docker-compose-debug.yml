@@ -17,7 +17,7 @@ services:
     ports:
       - '3306:3306'
     volumes:
-      - ./data/mysql:/var/lib/mysql
+      - ./data/mysql/mysql:/var/lib/mysql
     command:
       - --character-set-server=utf8mb4
       - --collation-server=utf8mb4_unicode_ci
@@ -52,7 +52,7 @@ services:
       - REDIS_IO_THREADS=${REDIS_IO_THREADS:-4}
       - ALLOW_EMPTY_PASSWORD=${ALLOW_EMPTY_PASSWORD:-yes}
     ports:
-      - '6379:6379'
+      - '6380:6379'
     volumes:
       - ./data/bitnami/redis:/bitnami/redis/data:rw,Z
     command: >
@@ -231,7 +231,7 @@ services:
 
           # Download plugin package locally
           echo 'Copying smartcn plugin...';
-          cp /opt/bitnami/elasticsearch/analysis-smartcn.zip /tmp/analysis-smartcn.zip 
+          cp /opt/bitnami/elasticsearch/analysis-smartcn.zip /tmp/analysis-smartcn.zip
 
           elasticsearch-plugin install file:///tmp/analysis-smartcn.zip
           if [[ "$$?" != "0" ]]; then
@@ -316,8 +316,8 @@ services:
       - 2379:2379
       - 2380:2380
     volumes:
-      - ./data/bitnami/etcd:/bitnami/etcd:rw,Z
-      - ./volumes/etcd/etcd.conf.yml:/opt/bitnami/etcd/conf/etcd.conf.yml:ro,Z
+      - ./data/bitnami/debugger/etcd:/bitnami/etcd:rw,Z
+      - ./volumes/etcd/debugger/etcd.conf.yml:/opt/bitnami/etcd/conf/etcd.conf.yml:ro,Z
     command: >
       bash -c "
         /opt/bitnami/scripts/etcd/setup.sh

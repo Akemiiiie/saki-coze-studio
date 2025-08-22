@@ -30,6 +30,7 @@ import (
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/entity/vo"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/execute"
 	"github.com/coze-dev/coze-studio/backend/domain/workflow/internal/nodes"
+	"github.com/coze-dev/coze-studio/backend/pkg/lang/conv"
 	"github.com/coze-dev/coze-studio/backend/pkg/logs"
 	"github.com/coze-dev/coze-studio/backend/pkg/sonic"
 )
@@ -424,7 +425,7 @@ func getExecUserID(ctx context.Context) string {
 	if execCtx.RootCtx.ExeCfg.AgentID != nil {
 		return execCtx.RootCtx.ExeCfg.ConnectorUID
 	}
-	uIDStr := strconv.FormatInt(execCtx.RootCtx.ExeCfg.Operator, 10)
+	uIDStr := conv.Int64ToStr(execCtx.RootCtx.ExeCfg.Operator)
 	return uIDStr
 }
 

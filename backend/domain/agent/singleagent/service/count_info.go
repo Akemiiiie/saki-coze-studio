@@ -23,11 +23,11 @@ import (
 	"github.com/coze-dev/coze-studio/backend/api/model/playground"
 )
 
-func makeAgentPopupInfoKey(uid, agentID int64, agentPopupType playground.BotPopupType) string {
+func makeAgentPopupInfoKey(uid int, agentID int64, agentPopupType playground.BotPopupType) string {
 	return fmt.Sprintf("agent:popup_info:uid:%d:%d:%d", uid, agentID, int64(agentPopupType))
 }
 
-func (s *singleAgentImpl) GetAgentPopupCount(ctx context.Context, uid, agentID int64, agentPopupType playground.BotPopupType) (int64, error) {
+func (s *singleAgentImpl) GetAgentPopupCount(ctx context.Context, uid int, agentID int64, agentPopupType playground.BotPopupType) (int64, error) {
 	key := makeAgentPopupInfoKey(uid, agentID, agentPopupType)
 
 	count, err := s.CounterRepo.Get(ctx, key)
@@ -38,7 +38,7 @@ func (s *singleAgentImpl) GetAgentPopupCount(ctx context.Context, uid, agentID i
 	return count, nil
 }
 
-func (s *singleAgentImpl) IncrAgentPopupCount(ctx context.Context, uid, agentID int64, agentPopupType playground.BotPopupType) error {
+func (s *singleAgentImpl) IncrAgentPopupCount(ctx context.Context, uid int, agentID int64, agentPopupType playground.BotPopupType) error {
 	key := makeAgentPopupInfoKey(uid, agentID, agentPopupType)
 	return s.CounterRepo.IncrBy(ctx, key, 1)
 }

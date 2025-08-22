@@ -352,27 +352,27 @@ func (k *knowledgeSVC) CreateDocument(ctx context.Context, request *CreateDocume
 		Storage:        k.storage,
 		Rdb:            k.rdb,
 	})
-	// 1. Front action, upload tos, etc
+	// 1. 前置操作、上传待办事项等
 	err = docProcessor.BeforeCreate()
 	if err != nil {
 		return nil, err
 	}
-	// 2. Build, drop library
+	// 2. 建立、删除图书馆
 	err = docProcessor.BuildDBModel()
 	if err != nil {
 		return nil, err
 	}
-	// 3. Insert into the database
+	// 3. 插入数据库
 	err = docProcessor.InsertDBModel()
 	if err != nil {
 		return nil, err
 	}
-	// 4. Initiate the indexing task
+	// 4. 启动索引任务
 	err = docProcessor.Indexing()
 	if err != nil {
 		return nil, err
 	}
-	// 5. Return the processed document information
+	// 5. 返回已处理的文件信息
 	docs := docProcessor.GetResp()
 	return &CreateDocumentResponse{
 		Documents: docs,
@@ -688,7 +688,7 @@ func (k *knowledgeSVC) CreateSlice(ctx context.Context, request *CreateSliceRequ
 	sliceEntity := entity.Slice{
 		Info: knowledgeModel.Info{
 			ID:        id,
-			CreatorID: request.CreatorID,
+			CreatorID: int64(request.CreatorID),
 		},
 		DocumentID: request.DocumentID,
 		RawContent: request.RawContent,
